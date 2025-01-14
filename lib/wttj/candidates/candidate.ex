@@ -1,12 +1,14 @@
 defmodule Wttj.Candidates.Candidate do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Wttj.Status.Status
 
   schema "candidates" do
     field :position, :integer
-    field :status, Ecto.Enum, values: [:new, :interview, :rejected, :hired], default: :new
     field :email, :string
     field :job_id, :id
+
+    belongs_to :status, Status
 
     timestamps(type: :utc_datetime)
   end
