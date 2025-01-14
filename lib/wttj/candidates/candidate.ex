@@ -1,7 +1,7 @@
 defmodule Wttj.Candidates.Candidate do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Wttj.Status.Status
+  alias Wttj.Statuses.Status
 
   schema "candidates" do
     field :position, :integer

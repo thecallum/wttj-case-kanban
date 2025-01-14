@@ -1,4 +1,4 @@
-defmodule Wttj.Status.Status do
+defmodule Wttj.Statuses.Status do
   use Ecto.Schema
   import Ecto.Changeset
   alias Wttj.Candidates.Candidate
