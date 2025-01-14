@@ -3,18 +3,19 @@ defmodule WttjWeb.CandidateControllerTest do
 
   import Wttj.JobsFixtures
   import Wttj.CandidatesFixtures
+  import Wttj.StatusesFixtures
 
   alias Wttj.Candidates.Candidate
 
   @update_attrs %{
-    position: 43,
-    status: :interview
+    position: 43
   }
   @invalid_attrs %{position: nil, status: nil, email: nil}
 
   setup %{conn: conn} do
     job = job_fixture()
-    {:ok, conn: put_req_header(conn, "accept", "application/json"), job: job}
+    status = status_fixture(%{job_id: job.id})
+    {:ok, conn: put_req_header(conn, "accept", "application/json"), job: job, status: status}
   end
 
   describe "index" do
@@ -43,7 +44,6 @@ defmodule WttjWeb.CandidateControllerTest do
                "id" => ^id,
                "email" => ^email,
                "position" => 43,
-               "status" => "interview"
              } = json_response(conn, 200)["data"]
     end
 
@@ -53,8 +53,8 @@ defmodule WttjWeb.CandidateControllerTest do
     end
   end
 
-  defp create_candidate(%{job: job}) do
-    candidate = candidate_fixture(%{job_id: job.id})
+  defp create_candidate(%{job: job, status: status}) do
+    candidate = candidate_fixture(%{job_id: job.id, status_id: status.id})
     %{candidate: candidate}
   end
 end
