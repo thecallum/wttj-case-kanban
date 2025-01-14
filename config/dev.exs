@@ -2,8 +2,8 @@ import Config
 
 # Configure your database
 config :wttj, Wttj.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: "admin",
+  password: "root",
   hostname: "localhost",
   database: "wttj_dev",
   stacktrace: true,
