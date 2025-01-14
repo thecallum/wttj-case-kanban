@@ -13,4 +13,10 @@ defmodule Wttj.Statuses do
   def list_statuses(job_id) do
     Repo.all(from s in Status, where: s.job_id == ^job_id)
   end
+
+  def create_status(attrs \\ %{}) do
+    %Status{}
+    |> Status.changeset(attrs)
+    |> Repo.insert()
+  end
 end

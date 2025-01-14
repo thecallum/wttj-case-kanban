@@ -16,7 +16,7 @@ defmodule Wttj.Candidates.Candidate do
   @doc false
   def changeset(candidate, attrs) do
     candidate
-    |> cast(attrs, [:email, :status, :position, :job_id])
-    |> validate_required([:email, :status, :position, :job_id])
+    |> cast(attrs, [:email, :status_id, :position, :job_id])
+    |> validate_required([:email, :status_id, :position, :job_id])
   end
 end
