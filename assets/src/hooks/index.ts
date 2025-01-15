@@ -1,14 +1,14 @@
 import { useQuery } from 'react-query'
-import { getCandidates, getJob, getJobs, getStatuses } from '../api'
+import { getCandidates, getJob, getStatuses } from '../api'
 
-export const useJobs = () => {
-  const { isLoading, error, data } = useQuery({
-    queryKey: ['jobs'],
-    queryFn: getJobs,
-  })
+// export const useJobs = () => {
+//   const { isLoading, error, data } = useQuery({
+//     queryKey: ['jobs'],
+//     queryFn: getJobs,
+//   })
 
-  return { isLoading, error, jobs: data }
-}
+//   return { isLoading, error, jobs: data }
+// }
 
 export const useJob = (jobId?: string) => {
   const { isLoading, error, data } = useQuery({
