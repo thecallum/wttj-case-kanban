@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client'
-import { Job } from '../api'
+import { Job } from '../types'
 import { GET_JOBS } from '../graphql/queries/jobs'
 
 export const useJobs = () => {
