@@ -1,12 +1,13 @@
 defmodule Test do
-  alias FractionalIndex
-
   @doc """
   Generates the next index for a given candidate.
 
   # A, AA, AAA, AAAA
   """
-  def generate_index(before_index, after_index) do
+  def generate_index(before_index, after_index)
+      when (is_nil(before_index) or before_index > 0) and
+             (is_nil(after_index) or
+                (after_index > 0 and (is_nil(before_index) or after_index > before_index))) do
     case {before_index, after_index} do
       {nil, nil} ->
         "1"
@@ -25,8 +26,10 @@ defmodule Test do
   defp get_previous_number(value) do
     {int_value, _} = Integer.parse(value)
 
-    (int_value - 1)
-    |> to_string()
+    case int_value == 1 or int_value == 0 do
+      true -> midpoint("0", value)
+      false -> to_string(int_value - 1)
+    end
   end
 
   defp get_next_number(value) do
@@ -36,17 +39,18 @@ defmodule Test do
     |> to_string()
   end
 
-  @doc """
+  defp parse_num(value) do
+    case String.contains?(value, ".") do
+      true ->
+        String.to_float(value)
 
+      false ->
+        {num, _} = Integer.parse(value)
+        num * 1.0
+    end
+  end
 
-  example
-
-  iex(14)> Test.midpoint(4.343, 2)
-  {4343.0, 2000.0}
-
-
-  """
-  defp midpoint(a, b) do
+  def midpoint(a, b) do
     # Convert values to decimal to avoid any floating point errors
 
     # 1. Count number of decimal places
@@ -54,10 +58,12 @@ defmodule Test do
 
     # 2. Multiply both numbers by this value, so both are decimals
     # eg (4.123, 4.2) -> (4123, 4200)
-    multiplier = :math.pow(10, most_decimal_points)
+    multiplier =
+      :math.pow(10, most_decimal_points)
+      |> max(1)
 
-    a = a * multiplier
-    b = b * multiplier
+    a = parse_num(a) * multiplier
+    b = parse_num(b) * multiplier
 
     # 3. Calculate the mid point
     # eg 4161.5
@@ -65,7 +71,8 @@ defmodule Test do
 
     # 4. Divide the midpoint by the previous number of decimal places
     # eg 4.1615
-    midpoint / multiplier
+    (midpoint / multiplier)
+    |> to_string()
 
     # https://hexdocs.pm/decimal/Decimal.html#module-specifications
     # Im not sure what the precision of decimals are. This could be a problem at some point
