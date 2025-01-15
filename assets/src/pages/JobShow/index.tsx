@@ -20,18 +20,16 @@ function JobShow() {
   const sortedCandidates: SortedCandidates = useMemo(() => {
     if (!candidates) return {}
 
-    const statusesById: {[key: number]: Status} = {}
+    const statusesById: { [key: number]: Status } = {}
     statuses?.forEach(status => {
       statusesById[status.id] = status
-    });
+    })
 
     return candidates.reduce<SortedCandidates>((acc, c: Candidate) => {
       acc[c.statusId] = [...(acc[c.statusId] || []), c].sort((a, b) => a.position - b.position)
       return acc
     }, {})
   }, [candidates])
-
-
 
   if (loading) {
     return null

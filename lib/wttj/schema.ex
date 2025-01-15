@@ -2,10 +2,6 @@ defmodule Wttj.Schema do
   use Absinthe.Schema
   import_types Wttj.Types.SchemaTypes
 
-  # def plugins do
-    # [Absinthe.Middleware.Dataloader | Absinthe.Plugin.defaults()]
-  # end
-
   alias Wttj.Resolvers
 
   query do
