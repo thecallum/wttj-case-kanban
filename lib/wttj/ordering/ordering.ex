@@ -1,4 +1,4 @@
-defmodule Test do
+defmodule Wttj.Ordering do
   @doc """
   Generates the next index for a given candidate.
 
@@ -50,7 +50,7 @@ defmodule Test do
     end
   end
 
-  def midpoint(a, b) do
+  defp midpoint(a, b) do
     # Convert values to decimal to avoid any floating point errors
 
     # 1. Count number of decimal places
