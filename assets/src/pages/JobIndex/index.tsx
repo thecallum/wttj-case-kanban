@@ -1,18 +1,20 @@
 import { Link as RouterLink } from 'react-router-dom'
-import { useJobs } from '../../hooks'
 import { Link } from '@welcome-ui/link'
+import { useJobs } from '../../hooks/useJobs'
 
 function JobIndex() {
-  const { isLoading, jobs } = useJobs()
+  const { loading, error, jobs } = useJobs()
 
-  if (isLoading) {
+  if (error) return <p>Error : {error.message}</p>
+
+  if (loading) {
     return null
   }
 
   return (
     <ul>
-      {jobs?.map(job => (
-        <li>
+      {jobs.map(job => (
+        <li key={job.id}>
           <Link as={RouterLink} to={`/jobs/${job.id}`}>
             {job.name}
           </Link>

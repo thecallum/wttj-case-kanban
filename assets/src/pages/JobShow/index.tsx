@@ -1,12 +1,12 @@
 import { useParams } from 'react-router-dom'
-import { useJob, useCandidates, useStatuses } from '../../hooks'
 import { Text } from '@welcome-ui/text'
 import { Flex } from '@welcome-ui/flex'
 import { Box } from '@welcome-ui/box'
 import { useMemo } from 'react'
-import { Candidate, Status } from '../../api'
+import { Candidate, Status } from '../../types'
 import CandidateCard from '../../components/Candidate'
 import { Badge } from '@welcome-ui/badge'
+import { useBoard } from '../../hooks/useBoard'
 
 interface SortedCandidates {
   [key: string]: Candidate[]
@@ -14,23 +14,28 @@ interface SortedCandidates {
 
 function JobShow() {
   const { jobId } = useParams()
-  const { job } = useJob(jobId)
-  const { candidates } = useCandidates(jobId)
-  const { statuses } = useStatuses(jobId)
+
+  const { loading, error, job, candidates, statuses } = useBoard(jobId!)
 
   const sortedCandidates: SortedCandidates = useMemo(() => {
     if (!candidates) return {}
 
-    const statusesById: {[key: number]: Status} = {}
+    const statusesById: { [key: number]: Status } = {}
     statuses?.forEach(status => {
       statusesById[status.id] = status
-    });
+    })
 
     return candidates.reduce<SortedCandidates>((acc, c: Candidate) => {
-      acc[c.status_id] = [...(acc[c.status_id] || []), c].sort((a, b) => a.position - b.position)
+      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort((a, b) => a.position - b.position)
       return acc
     }, {})
   }, [candidates])
+
+  if (loading) {
+    return null
+  }
+
+  if (error) return <p>Error : {error.message}</p>
 
   return (
     <>
