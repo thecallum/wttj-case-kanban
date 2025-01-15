@@ -1,6 +1,6 @@
-defmodule Wttj.OrderingTest do
+defmodule Wttj.IndexingTest do
   use ExUnit.Case
-  alias Wttj.Ordering
+  alias Wttj.Indexing
 
   @moduledoc """
   Tests generate_index/2 method, which generates the next index for a candidate. This covers the following scenarios:
@@ -12,7 +12,7 @@ defmodule Wttj.OrderingTest do
 
   describe "generate_index/2 when initializing first index" do
     test "returns '1' as this is the first item" do
-      assert Ordering.generate_index(nil, nil) == "1"
+      assert Indexing.generate_index(nil, nil) == "1"
     end
   end
 
@@ -27,7 +27,7 @@ defmodule Wttj.OrderingTest do
 
     for {input, expected} <- @test_data do
       test "returns #{expected} when input is #{input}" do
-        assert Ordering.generate_index(nil, unquote(input)) == unquote(expected)
+        assert Indexing.generate_index(nil, unquote(input)) == unquote(expected)
       end
     end
   end
@@ -43,7 +43,7 @@ defmodule Wttj.OrderingTest do
 
     for {input, expected} <- @test_data do
       test "returns #{expected} when input is #{input}" do
-        assert Ordering.generate_index(unquote(input), nil) == unquote(expected)
+        assert Indexing.generate_index(unquote(input), nil) == unquote(expected)
       end
     end
   end
@@ -66,7 +66,7 @@ defmodule Wttj.OrderingTest do
 
     for {a, b, expected} <- @test_data do
       test "returns #{expected} when inputs are #{a} and #{b}" do
-        assert Ordering.generate_index(unquote(a), unquote(b)) == unquote(expected)
+        assert Indexing.generate_index(unquote(a), unquote(b)) == unquote(expected)
       end
     end
   end

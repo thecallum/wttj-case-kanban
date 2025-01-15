@@ -1,4 +1,4 @@
-defmodule Wttj.Ordering do
+defmodule Wttj.Indexing do
    @moduledoc """
   Provides functionality for generating ordered indices in a list, allowing for insertion
   of items at any position while maintaining a consistent ordering.
