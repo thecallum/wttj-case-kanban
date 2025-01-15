@@ -9,6 +9,12 @@ defmodule Wttj.Schema do
   alias Wttj.Resolvers
 
   query do
+    @desc "Get job by id"
+    field :job, type: :job do
+      arg :job_id, non_null(:id)
+      resolve &Resolvers.JobTracking.get_job/3
+    end
+
     @desc "Get all jobs"
     field :jobs, list_of(:job) do
       resolve &Resolvers.JobTracking.list_jobs/3

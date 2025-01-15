@@ -3,6 +3,13 @@ defmodule Wttj.Resolvers.JobTracking do
   alias Wttj.Candidates
   alias Wttj.Statuses
 
+  def get_job(_parent, %{job_id: job_id}, _resolution) do
+    case Jobs.get_job(job_id) do
+      nil -> {:error, "Job not found"}
+      job -> {:ok, job}
+    end
+  end
+
   def list_jobs(_parent, _args, _resolution) do
     jobs = Jobs.list_jobs()
 
