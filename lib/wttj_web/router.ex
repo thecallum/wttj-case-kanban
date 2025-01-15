@@ -14,7 +14,19 @@ defmodule WttjWeb.Router do
     plug :accepts, ["json"]
   end
 
-  # Other scopes may use custom stacks.
+  scope "/api" do
+    pipe_through :api
+
+    forward "/graphql", Absinthe.Plug,
+      schema: Wttj.Schema
+
+    if Mix.env() == :dev do
+      forward "/graphiql", Absinthe.Plug.GraphiQL,
+        schema: Wttj.Schema,
+        interface: :playground
+    end
+  end
+
   scope "/api", WttjWeb do
     pipe_through :api
 
