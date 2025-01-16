@@ -97,7 +97,7 @@ defmodule Wttj.Candidates do
       result when length(result) > 1 ->
         {:error, "more than one candidate found within range"}
 
-      [first] ->
+      [_first] ->
         {:error, "candidate not found with matching display order"}
 
       _ ->
@@ -122,7 +122,7 @@ defmodule Wttj.Candidates do
       result when length(result) > 1 ->
         {:error, "more than one candidate found within range"}
 
-      [first] ->
+      [_first] ->
         {:error, "candidate not found with matching display order"}
 
       _ ->
