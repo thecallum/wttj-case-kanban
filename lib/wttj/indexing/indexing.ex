@@ -1,5 +1,5 @@
 defmodule Wttj.Indexing do
-   @moduledoc """
+  @moduledoc """
   Provides functionality for generating ordered indices in a list, allowing for insertion
   of items at any position while maintaining a consistent ordering.
   """
@@ -42,19 +42,18 @@ defmodule Wttj.Indexing do
       when (is_nil(before_index) or before_index > 0) and
              (is_nil(after_index) or
                 (after_index > 0 and (is_nil(before_index) or after_index > before_index))) do
-
     case {before_index, after_index} do
       {nil, nil} ->
-        "1"
+        {:ok, "1"}
 
       {nil, after_value} ->
-        get_previous_number(after_value)
+        {:ok, get_previous_number(after_value)}
 
       {before_value, nil} ->
-        get_next_number(before_value)
+        {:ok, get_next_number(before_value)}
 
       {before_value, after_value} ->
-        get_midpoint(before_value, after_value)
+        {:ok, get_midpoint(before_value, after_value)}
     end
   end
 
