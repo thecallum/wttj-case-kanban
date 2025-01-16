@@ -5,6 +5,7 @@ defmodule Wttj.Candidates.Candidate do
 
   schema "candidates" do
     field :position, :integer
+    field :display_order, :string
     field :email, :string
     field :job_id, :id
 
@@ -16,7 +17,8 @@ defmodule Wttj.Candidates.Candidate do
   @doc false
   def changeset(candidate, attrs) do
     candidate
-    |> cast(attrs, [:email, :status_id, :position, :job_id])
-    |> validate_required([:email, :status_id, :position, :job_id])
+    |> cast(attrs, [:email, :status_id, :position, :display_order, :job_id])
+    |> validate_required([:email, :status_id, :position, :display_order, :job_id])
+    |> unique_constraint([:status_id, :display_order], name: :candidates_status_id_display_order_index)
   end
 end
