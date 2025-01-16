@@ -25,7 +25,7 @@ defmodule Wttj.Candidates do
     case {before_index, after_index} do
       {nil, nil} ->
         if is_nil(destination_status_id) or candidate.status_id == destination_status_id do
-          {:error, "Candidate already exists in list"}
+          {:error, "candidate already exists in the list youre trying to move it to"}
         else
           validate_move_candidate_empty_list(
             candidate,
@@ -59,7 +59,7 @@ defmodule Wttj.Candidates do
 
   defp get_candidate_by_id(candidate_id) do
     case Repo.get(Candidate, candidate_id) do
-      nil -> {:error, "Candidate not found"}
+      nil -> {:error, "candidate not found"}
       candidate -> {:ok, candidate}
     end
   end
@@ -76,7 +76,7 @@ defmodule Wttj.Candidates do
     if Repo.aggregate(query, :count) == 0 do
       {:ok}
     else
-      {:error, "Cannot insert first indicie. Other indicies found"}
+      {:error, "cannot insert first candidate in list. others already present"}
     end
   end
 
@@ -95,13 +95,13 @@ defmodule Wttj.Candidates do
         {:ok}
 
       result when length(result) > 1 ->
-        {:error, "more than one indicie found"}
+        {:error, "more than one candidate found within range"}
 
       [first] ->
-        {:error, "Index not found in database: #{first}, expected #{after_index}"}
+        {:error, "candidate not found with matching display order"}
 
       _ ->
-        {:error, "indicies not found"}
+        {:error, "no candidates found within range"}
     end
   end
 
@@ -120,13 +120,13 @@ defmodule Wttj.Candidates do
         {:ok}
 
       result when length(result) > 1 ->
-        {:error, "more than one indicie found"}
+        {:error, "more than one candidate found within range"}
 
       [first] ->
-        {:error, "Index not found in database: #{first}, expected #{before_index}"}
+        {:error, "candidate not found with matching display order"}
 
       _ ->
-        {:error, "indicies not found"}
+        {:error, "no candidates found within range"}
     end
   end
 
@@ -146,10 +146,10 @@ defmodule Wttj.Candidates do
         {:ok}
 
       result when length(result) > 2 ->
-        {:error, "indicies are not consecutive"}
+        {:error, "more than two candidates found within range"}
 
       _ ->
-        {:error, "one or more indicie not found"}
+        {:error, "one or more candidate not found"}
     end
   end
 

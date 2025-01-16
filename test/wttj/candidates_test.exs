@@ -71,7 +71,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate_id, nil, nil)
 
       # Assert
-      assert result == {:error, "Candidate not found"}
+      assert result == {:error, "candidate not found"}
     end
   end
 
@@ -85,7 +85,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate.id, nil, nil, status1.id)
 
       # Assert
-      assert result == {:error, "Candidate already exists in list"}
+      assert result == {:error, "candidate already exists in the list youre trying to move it to"}
     end
   end
 
@@ -104,7 +104,7 @@ defmodule Wttj.CandidatesTest do
         Candidates.update_candidate_display_order(candiate_in_status_2.id, nil, nil, status1.id)
 
       # Assert
-      assert result == {:error, "Cannot insert first indicie. Other indicies found"}
+      assert result == {:error, "cannot insert first candidate in list. others already present"}
     end
 
     test "update_candidate_display_order/3 returns ok when moving to empty list",
@@ -167,7 +167,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "more than one indicie found"} = result
+      assert {:error, "more than one candidate found within range"} = result
     end
 
     test "returns error when display_order not found in database",
@@ -183,7 +183,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate2.id, nil, "1.5", status2.id)
 
       # Assert
-      assert {:error, "Index not found in database: 1, expected 1.5"} = result
+      assert {:error, "candidate not found with matching display order"} = result
     end
 
     test "returns error when display_order",
@@ -196,7 +196,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate1.id, nil, "1", status1.id)
 
       # Assert
-      assert {:error, "indicies not found"} = result
+      assert {:error, "no candidates found within range"} = result
     end
   end
 
@@ -246,7 +246,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "more than one indicie found"} = result
+      assert {:error, "more than one candidate found within range"} = result
     end
 
     test "returns error when display_order not found in database",
@@ -262,7 +262,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate2.id, nil, "1.5", status2.id)
 
       # Assert
-      assert {:error, "Index not found in database: 1, expected 1.5"} = result
+      assert {:error, "candidate not found with matching display order"} = result
     end
 
     test "returns error when no candidates found",
@@ -275,7 +275,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate1.id, nil, "1", status2.id)
 
       # Assert
-      assert {:error, "indicies not found"} = result
+      assert {:error, "no candidates found within range"} = result
     end
   end
 
@@ -325,7 +325,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "more than one indicie found"} = result
+      assert {:error, "more than one candidate found within range"} = result
     end
 
     test "returns error when display_position not found in database",
@@ -341,7 +341,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate1.id, "1.5", nil, status2.id)
 
       # Assert
-      assert {:error, "Index not found in database: 2, expected 1.5"} = result
+      assert {:error, "candidate not found with matching display order"} = result
     end
 
     test "returns error when no candidates found",
@@ -354,7 +354,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate1.id, "1", nil, status1.id)
 
       # Assert
-      assert {:error, "indicies not found"} = result
+      assert {:error, "no candidates found within range"} = result
     end
   end
 
@@ -404,7 +404,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "more than one indicie found"} = result
+      assert {:error, "more than one candidate found within range"} = result
     end
 
     test "returns error when display_position not found in database",
@@ -420,7 +420,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate1.id, "1.5", nil, status2.id)
 
       # Assert
-      assert {:error, "Index not found in database: 2, expected 1.5"} = result
+      assert {:error, "candidate not found with matching display order"} = result
     end
 
     test "returns error when no candidates found",
@@ -433,7 +433,7 @@ defmodule Wttj.CandidatesTest do
       result = Candidates.update_candidate_display_order(candidate1.id, "1", nil, status2.id)
 
       # Assert
-      assert {:error, "indicies not found"} = result
+      assert {:error, "no candidates found within range"} = result
     end
   end
 
@@ -489,7 +489,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "indicies are not consecutive"} = result
+      assert {:error, "more than two candidates found within range"} = result
     end
 
     test "returns error one of the display positions not found in the database",
@@ -514,7 +514,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "one or more indicie not found"} = result
+      assert {:error, "one or more candidate not found"} = result
     end
   end
 
@@ -570,7 +570,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "indicies are not consecutive"} = result
+      assert {:error, "more than two candidates found within range"} = result
     end
 
     test "returns error one of the display positions not found in the database",
@@ -595,7 +595,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:error, "one or more indicie not found"} = result
+      assert {:error, "one or more candidate not found"} = result
     end
   end
 end
