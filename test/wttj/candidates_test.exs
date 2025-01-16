@@ -12,10 +12,11 @@ defmodule Wttj.CandidatesTest do
     job1 = job_fixture()
     job2 = job_fixture()
     status1 = status_fixture(%{job_id: job1.id})
-    status2 = status_fixture(%{job_id: job2.id})
+    status2 = status_fixture(%{job_id: job1.id})
+    status3 = status_fixture(%{job_id: job2.id})
 
     # candidate1 = candidate_fixture(%{job_id: job2.id, status_id: status1.id, display_order: "1"})
-    {:ok, job1: job1, job2: job2, status1: status1, status2: status2}
+    {:ok, job1: job1, job2: job2, status1: status1, status2: status2, status3: status3}
   end
 
   describe "candidates (existing tests)" do
@@ -25,21 +26,39 @@ defmodule Wttj.CandidatesTest do
 
     @invalid_attrs %{position: nil, status: nil, email: nil}
 
-    test "list_candidates/1 returns all candidates for a given job", %{job1: job1, job2: job2, status1: status1, status2: status2} do
-      candidate1 = candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+    test "list_candidates/1 returns all candidates for a given job", %{
+      job1: job1,
+      job2: job2,
+      status1: status1,
+      status2: status2
+    } do
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+
       _ = candidate_fixture(%{job_id: job2.id, status_id: status2.id, display_order: "1"})
       assert Candidates.list_candidates(job1.id) == [candidate1]
     end
 
     test "create_candidate/1 with valid data creates a candidate", %{job1: job1, status1: status1} do
       email = unique_user_email()
-      valid_attrs = %{email: email, position: 3, job_id: job1.id, status_id: status1.id, display_order: "1"}
+
+      valid_attrs = %{
+        email: email,
+        position: 3,
+        job_id: job1.id,
+        status_id: status1.id,
+        display_order: "1"
+      }
+
       assert {:ok, %Candidate{} = candidate} = Candidates.create_candidate(valid_attrs)
       assert candidate.email == email
       assert {:error, _} = Candidates.create_candidate()
     end
 
-    test "update_candidate/2 with valid data updates the candidate", %{job1: job1, status1: status1} do
+    test "update_candidate/2 with valid data updates the candidate", %{
+      job1: job1,
+      status1: status1
+    } do
       candidate = candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
       email = unique_user_email()
       update_attrs = %{position: 43, status: :rejected, email: email, status_id: status1.id}
@@ -52,7 +71,10 @@ defmodule Wttj.CandidatesTest do
       assert candidate.email == email
     end
 
-    test "update_candidate/2 with invalid data returns error changeset", %{job1: job1, status1: status1} do
+    test "update_candidate/2 with invalid data returns error changeset", %{
+      job1: job1,
+      status1: status1
+    } do
       candidate = candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
       assert {:error, %Ecto.Changeset{}} = Candidates.update_candidate(candidate, @invalid_attrs)
       assert candidate == Candidates.get_candidate!(job1.id, candidate.id)
@@ -61,6 +83,43 @@ defmodule Wttj.CandidatesTest do
     test "change_candidate/1 returns a candidate changeset", %{job1: job1, status1: status1} do
       candidate = candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
       assert %Ecto.Changeset{} = Candidates.change_candidate(candidate)
+    end
+  end
+
+  describe "update_candidate_display_order/3 when checking status" do
+    test "returns error when status doesnt belong to job",
+         %{job1: job1, job2: job2, status1: status1, status2: status2, status3: status3} do
+      # Arrange
+      candidate =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+      # Act
+      result = Candidates.update_candidate_display_order(candidate.id, nil, nil, status3.id)
+
+      # Assert
+      assert result == {:error, "status does not belong to job"}
+    end
+
+    test "returns error when status not found",
+         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+      # Arrange
+      candidate =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1",
+          job_id: job1.id
+        })
+
+      # Act
+      result = Candidates.update_candidate_display_order(candidate.id, nil, nil, 100)
+
+      # Assert
+      assert result == {:error, "status not found"}
     end
   end
 
@@ -81,7 +140,12 @@ defmodule Wttj.CandidatesTest do
     test "returns error when to same list",
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
-      candidate = candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+      candidate =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
 
       # Act
       result = Candidates.update_candidate_display_order(candidate.id, nil, nil, status1.id)
@@ -96,10 +160,18 @@ defmodule Wttj.CandidatesTest do
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
       candiate_in_status_1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
 
       candiate_in_status_2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status2.id,
+          display_order: "1"
+        })
 
       # Act
       result =
@@ -112,7 +184,12 @@ defmodule Wttj.CandidatesTest do
     test "returns ok",
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
-      candidate = candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+      candidate =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
 
       # Act
       result = Candidates.update_candidate_display_order(candidate.id, nil, nil, status2.id)
@@ -133,10 +210,18 @@ defmodule Wttj.CandidatesTest do
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
 
       candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "2"
+        })
 
       # Act
       result =
@@ -161,13 +246,25 @@ defmodule Wttj.CandidatesTest do
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
 
       candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "2"
+        })
 
       candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "3"
+        })
 
       # Act
       result =
@@ -614,13 +711,25 @@ defmodule Wttj.CandidatesTest do
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
 
       candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "2"
+        })
 
       candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "3"})
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status2.id,
+          display_order: "3"
+        })
 
       # Act
       result =

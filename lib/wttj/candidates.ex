@@ -7,6 +7,7 @@ defmodule Wttj.Candidates do
   alias Wttj.Repo
   alias Wttj.Indexing
   alias Wttj.Candidates.Candidate
+  alias Wttj.Statuses.Status
 
   def update_candidate_display_order(
         candidate_id,
@@ -15,6 +16,7 @@ defmodule Wttj.Candidates do
         destination_status_id \\ nil
       ) do
     with {:ok, candidate} <- get_candidate_by_id(candidate_id),
+         {:ok} <- validate_status_owned_by_board(candidate, destination_status_id),
          {:ok, new_index} <- Indexing.generate_index(before_index, after_index),
          {:ok} <-
            validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
@@ -27,7 +29,27 @@ defmodule Wttj.Candidates do
     end
   end
 
+  defp validate_status_owned_by_board(_candidate, nil), do: {:ok}
+
+  defp validate_status_owned_by_board(candidate, destination_status_id) do
+    query = from s in Status,
+      where: s.id == ^destination_status_id
+
+    case Repo.one(query) do
+      nil ->
+        {:error, "status not found"}
+      status ->
+        if status.job_id == candidate.job_id do
+          {:ok}
+        else
+          {:error, "status does not belong to job"}
+        end
+    end
+  end
+
   defp validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
+    # board_id = candidate.
+
     case {before_index, after_index} do
       {nil, nil} ->
         if is_nil(destination_status_id) or candidate.status_id == destination_status_id do
