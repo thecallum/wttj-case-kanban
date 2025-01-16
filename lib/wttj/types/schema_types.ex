@@ -19,6 +19,7 @@ defmodule Wttj.Types.SchemaTypes do
   object :candidate do
     field :id, :id
     field :position, :integer
+    field :display_order, :string
     field :email, :string
     field :job_id, :id
     field :status_id, :id
