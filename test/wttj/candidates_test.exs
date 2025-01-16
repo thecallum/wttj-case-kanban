@@ -1,10 +1,12 @@
 defmodule Wttj.CandidatesTest do
   use Wttj.DataCase
-
+  alias Wttj.Repo
+  alias Exto.Query, warn: false
   alias Wttj.Candidates
   import Wttj.JobsFixtures
   import Wttj.StatusesFixtures
   import Wttj.CandidatesFixtures
+  alias Wttj.Candidates.Candidate
 
   setup do
     job1 = job_fixture()
@@ -75,7 +77,7 @@ defmodule Wttj.CandidatesTest do
     end
   end
 
-  describe "update_candidate_display_order/3 when moving a candidate with the same, empty list" do
+  describe "update_candidate_display_order/3 when moving a candidate with the same empty list" do
     test "returns error when to same list",
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
@@ -89,7 +91,7 @@ defmodule Wttj.CandidatesTest do
     end
   end
 
-  describe "update_candidate_display_order/3 when moving a candidate to a different, empty list" do
+  describe "update_candidate_display_order/3 when moving a candidate to a different empty list" do
     test "returns error when list isnt empty",
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
@@ -107,7 +109,7 @@ defmodule Wttj.CandidatesTest do
       assert result == {:error, "cannot insert first candidate in list. others already present"}
     end
 
-    test "update_candidate_display_order/3 returns ok when moving to empty list",
+    test "returns ok",
          %{job1: job1, job2: job2, status1: status1, status2: status2} do
       # Arrange
       candidate = candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -118,6 +120,11 @@ defmodule Wttj.CandidatesTest do
       # Assert
       assert {:ok, candidate} = result
       assert candidate.display_order == "1"
+      assert candidate.status_id == status2.id
+
+      db_response = Repo.get(Candidate, candidate.id)
+      assert db_response.display_order == "1"
+      assert db_response.status_id == status2.id
     end
   end
 
@@ -143,6 +150,11 @@ defmodule Wttj.CandidatesTest do
       # Assert
       assert {:ok, candidate} = result
       assert candidate.display_order == "0.5"
+      assert candidate.status_id == status1.id
+
+      db_response = Repo.get(Candidate, candidate.id)
+      assert db_response.display_order == "0.5"
+      assert db_response.status_id == status1.id
     end
 
     test "returns error when more than one display_order found",
@@ -222,6 +234,11 @@ defmodule Wttj.CandidatesTest do
       # Assert
       assert {:ok, candidate} = result
       assert candidate.display_order == "0.5"
+      assert candidate.status_id == status2.id
+
+      db_response = Repo.get(Candidate, candidate.id)
+      assert db_response.display_order == "0.5"
+      assert db_response.status_id == status2.id
     end
 
     test "returns error when more than one display_order found",
@@ -301,6 +318,11 @@ defmodule Wttj.CandidatesTest do
       # Assert
       assert {:ok, candidate} = result
       assert candidate.display_order == "3"
+      assert candidate.status_id == status1.id
+
+      db_response = Repo.get(Candidate, candidate.id)
+      assert db_response.display_order == "3"
+      assert db_response.status_id == status1.id
     end
 
     test "returns error when more than one candidate found",
@@ -380,6 +402,11 @@ defmodule Wttj.CandidatesTest do
       # Assert
       assert {:ok, candidate} = result
       assert candidate.display_order == "3"
+      assert candidate.status_id == status2.id
+
+      db_response = Repo.get(Candidate, candidate.id)
+      assert db_response.display_order == "3"
+      assert db_response.status_id == status2.id
     end
 
     test "returns error when more than one candidate found",
@@ -462,6 +489,11 @@ defmodule Wttj.CandidatesTest do
       # Assert
       assert {:ok, candidate} = result
       assert candidate.display_order == "1.5"
+      assert candidate.status_id == status1.id
+
+      db_response = Repo.get(Candidate, candidate.id)
+      assert db_response.display_order == "1.5"
+      assert db_response.status_id == status1.id
     end
 
     test "returns error when more than two candidates returned",
@@ -543,6 +575,11 @@ defmodule Wttj.CandidatesTest do
       # Assert
       assert {:ok, candidate} = result
       assert candidate.display_order == "1.5"
+      assert candidate.status_id == status1.id
+
+      db_response = Repo.get(Candidate, candidate.id)
+      assert db_response.display_order == "1.5"
+      assert db_response.status_id == status1.id
     end
 
     test "returns error when more than two candidates returned",

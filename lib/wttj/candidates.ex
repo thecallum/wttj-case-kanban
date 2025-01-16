@@ -16,8 +16,14 @@ defmodule Wttj.Candidates do
       ) do
     with {:ok, candidate} <- get_candidate_by_id(candidate_id),
          {:ok, new_index} <- Indexing.generate_index(before_index, after_index),
-         {:ok} <- validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
-      Repo.update(Candidate.changeset(candidate, %{display_order: new_index}))
+         {:ok} <-
+           validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
+      Repo.update(
+        Candidate.changeset(candidate, %{
+          display_order: new_index,
+          status_id: destination_status_id || candidate.status_id
+        })
+      )
     end
   end
 
