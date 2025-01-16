@@ -7,7 +7,14 @@ import { Candidate, Status } from '../../types'
 import CandidateCard from '../../components/Candidate'
 import { Badge } from '@welcome-ui/badge'
 import { useBoard } from '../../hooks/useBoard'
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult,
+  OnDragEndResponder,
+} from '@hello-pangea/dnd'
+import { gql, useMutation } from '@apollo/client'
 
 interface SortedCandidates {
   [key: string]: Candidate[]
@@ -16,6 +23,27 @@ interface SortedCandidates {
 function JobShow() {
   const { jobId } = useParams<{ jobId: string }>()
   const { loading, error, job, candidates, statuses } = useBoard(jobId!)
+
+  const QUERY = gql`
+    mutation MoveCandidate(
+      $candidateId: ID!
+      $beforeIndex: String
+      $afterIndex: String
+      $destinationStatusId: ID
+    ) {
+      moveCandidate(
+        candidateId: $candidateId
+        beforeIndex: $beforeIndex
+        afterIndex: $afterIndex
+        destinationStatusId: $destinationStatusId
+      ) {
+        id
+        displayOrder
+      }
+    }
+  `
+
+  const [moveCandidate, vars] = useMutation(QUERY)
 
   const sortedCandidates: SortedCandidates = useMemo(() => {
     if (!candidates) return {}
@@ -26,7 +54,9 @@ function JobShow() {
     })
 
     return candidates.reduce<SortedCandidates>((acc, c: Candidate) => {
-      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort((a, b) => a.position - b.position)
+      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort(
+        (a, b) => parseFloat(a.displayOrder) - parseFloat(b.displayOrder)
+      )
       return acc
     }, {})
   }, [candidates])
@@ -37,8 +67,45 @@ function JobShow() {
 
   if (error) return <p>Error : {error.message}</p>
 
-  const handleOnDragEnd = e => {
-    console.log('onDragEnd', { e })
+  const handleOnDragEnd = (result: DropResult) => {
+    if (result.reason !== 'DROP') return
+    
+    const { draggableId: candidateId, destination } = result
+    const destinationStatusId = destination?.droppableId
+    const index = destination?.index
+    
+    if (!destination || !sortedCandidates.hasOwnProperty(destinationStatusId)) {
+      return moveCandidate({ 
+        variables: {
+          candidateId,
+          beforeIndex: null,
+          afterIndex: null,
+          destinationStatusId
+        }
+      })
+    }
+  
+    const destinationList = sortedCandidates[destinationStatusId]
+    let beforeIndex: string | null = null
+    let afterIndex: string | null = null
+    
+    if (index === destinationList.length) {
+      beforeIndex = destinationList[destinationList.length - 1].displayOrder
+    } else if (index === 0) {
+      afterIndex = destinationList[0].displayOrder
+    } else {
+      beforeIndex = destinationList[index! - 1].displayOrder
+      afterIndex = destinationList[index!].displayOrder
+    }
+  
+    moveCandidate({
+      variables: {
+        candidateId,
+        beforeIndex,
+        afterIndex,
+        destinationStatusId
+      }
+    })
   }
 
   return (
@@ -75,14 +142,14 @@ function JobShow() {
                   <Badge>{(sortedCandidates[status.id] || []).length}</Badge>
                 </Flex>
 
-                <Droppable droppableId={`droppable-${status.id}`}>
+                <Droppable droppableId={`${status.id}`}>
                   {provided => (
                     <div {...provided.droppableProps} ref={provided.innerRef}>
                       <Flex direction="column" p={10} pb={0}>
                         {sortedCandidates[status.id]?.map((candidate: Candidate, index: number) => (
                           <Draggable
                             key={candidate.id}
-                            draggableId={`draggable-${candidate.id}`}
+                            draggableId={`${candidate.id}`}
                             index={index}
                           >
                             {provided => (

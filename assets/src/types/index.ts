@@ -13,5 +13,5 @@ export type Candidate = {
   id: number
   email: string
   statusId: number
-  position: number
+  displayOrder: string
 }

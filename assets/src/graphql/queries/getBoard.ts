@@ -10,8 +10,8 @@ export const GET_BOARD = gql`
       email
       id
       jobId
-      position
       statusId
+      displayOrder
     }
     statuses(jobId: $jobId) {
       id
