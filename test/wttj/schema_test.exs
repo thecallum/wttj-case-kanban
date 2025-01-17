@@ -232,7 +232,7 @@ defmodule Wttj.SchemaTest do
 
   describe "mutation :move_candidate" do
     @move_candidate_mutation """
-      mutation MoveCandidate($candidateId: ID!, $beforeIndex: String, $afterIndex: String, $destinationStatusId: ID) {
+      mutation MoveCandidate($candidateId: ID!, $beforeIndex: DisplayOrder, $afterIndex: DisplayOrder, $destinationStatusId: ID) {
         moveCandidate(candidateId: $candidateId, beforeIndex: $beforeIndex, afterIndex: $afterIndex, destinationStatusId: $destinationStatusId) {
           email
           id
@@ -391,6 +391,28 @@ defmodule Wttj.SchemaTest do
                  "displayOrder" => "2.5"
                }
              }
+    end
+
+    test "returns error when before_index and after_index are invalid format" do
+      # Arrange
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => 100,
+            "beforeIndex" => "1.2s",
+            "afterIndex" => "abcd"
+          }
+        )
+
+      # Assert
+      assert Enum.map(result.errors, fn error -> error.message end) == [
+               "Argument \"beforeIndex\" has invalid value $beforeIndex.\nInvalid format for type DisplayOrder. Expected a float, but as a string. For example '1', '2.5', '10.99'. The value '0' is not allowed.",
+               "Argument \"afterIndex\" has invalid value $afterIndex.\nInvalid format for type DisplayOrder. Expected a float, but as a string. For example '1', '2.5', '10.99'. The value '0' is not allowed."
+             ]
     end
 
     test "returns error when :candidate_id not included" do
