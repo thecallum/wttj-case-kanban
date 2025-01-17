@@ -28,7 +28,6 @@ defmodule Wttj.Resolvers.JobTrackingTest do
 
       # Assert
       assert {:ok, job} == result
-      # assert
     end
   end
 
