@@ -231,13 +231,272 @@ defmodule Wttj.SchemaTest do
   end
 
   describe "mutation :move_candidate" do
-    test "returns candidate when transaction successful" do
+    @move_candidate_mutation """
+      mutation MoveCandidate($candidateId: ID!, $beforeIndex: String, $afterIndex: String, $destinationStatusId: ID) {
+        moveCandidate(candidateId: $candidateId, beforeIndex: $beforeIndex, afterIndex: $afterIndex, destinationStatusId: $destinationStatusId) {
+          email
+          id
+          jobId
+          position
+          statusId
+          displayOrder
+        }
+      }
+    """
+
+    test "returns ok when moving candidate to empty list" do
+      # Arrange
+      job1 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+      status2 = status_fixture(%{job_id: job1.id})
+
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => candidate1.id,
+            "destinationStatusId" => status2.id
+          }
+        )
+
+      # Assert
+      assert result.data == %{
+               "moveCandidate" => %{
+                 "email" => candidate1.email,
+                 "id" => to_string(candidate1.id),
+                 "jobId" => to_string(candidate1.job_id),
+                 "position" => candidate1.position,
+                 "statusId" => to_string(status2.id),
+                 "displayOrder" => "1"
+               }
+             }
+    end
+
+    test "returns ok when moving candidate to top of list" do
+      # Arrange
+      job1 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+
+      candidate2 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
+      candidate3 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => candidate3.id,
+            "afterIndex" => candidate1.display_order
+            # "destinationStatusId" => status2.id
+          }
+        )
+
+      # Assert
+      assert result.data == %{
+               "moveCandidate" => %{
+                 "email" => candidate3.email,
+                 "id" => to_string(candidate3.id),
+                 "jobId" => to_string(candidate3.job_id),
+                 "position" => candidate3.position,
+                 "statusId" => to_string(status1.id),
+                 "displayOrder" => "0.5"
+               }
+             }
+    end
+
+    test "returns ok when moving candidate to bottom of list" do
+      # Arrange
+      job1 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+
+      candidate2 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
+      candidate3 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => candidate1.id,
+            "beforeIndex" => candidate3.display_order
+          }
+        )
+
+      # Assert
+      assert result.data == %{
+               "moveCandidate" => %{
+                 "email" => candidate1.email,
+                 "id" => to_string(candidate1.id),
+                 "jobId" => to_string(candidate1.job_id),
+                 "position" => candidate1.position,
+                 "statusId" => to_string(status1.id),
+                 "displayOrder" => "4"
+               }
+             }
+    end
+
+    test "returns ok when moving candidate within a list" do
+      # Arrange
+      job1 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+
+      candidate2 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
+      candidate3 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => candidate1.id,
+            "beforeIndex" => candidate2.display_order,
+            "afterIndex" => candidate3.display_order
+          }
+        )
+
+      # Assert
+      assert result.data == %{
+               "moveCandidate" => %{
+                 "email" => candidate1.email,
+                 "id" => to_string(candidate1.id),
+                 "jobId" => to_string(candidate1.job_id),
+                 "position" => candidate1.position,
+                 "statusId" => to_string(status1.id),
+                 "displayOrder" => "2.5"
+               }
+             }
     end
 
     test "returns error when :candidate_id not included" do
+      # Arrange
+      job1 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+      status2 = status_fixture(%{job_id: job1.id})
+
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema
+        )
+
+      # Assert
+      assert Enum.map(result.errors, fn error -> error.message end) == [
+               "In argument \"candidateId\": Expected type \"ID!\", found null.",
+               "Variable \"candidateId\": Expected non-null, found null."
+             ]
+    end
+
+    test "returns error when status not owned by job" do
+      # Arrange
+      job1 = job_fixture()
+      job2 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+      status2 = status_fixture(%{job_id: job2.id})
+
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => candidate1.id,
+            "destinationStatusId" => status2.id
+          }
+        )
+
+      # Assert
+      assert Enum.map(result.errors, fn error -> error.message end) == [
+               "status does not belong to job"
+             ]
     end
 
     test "returns error when candidate not found" do
+      # Arrange
+      job1 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => 100
+          }
+        )
+
+      # Assert
+      assert Enum.map(result.errors, fn error -> error.message end) == [
+               "candidate not found"
+             ]
+    end
+
+    test "returns error when range includes more than 2 candidates" do
+      # Arrange
+      job1 = job_fixture()
+      status1 = status_fixture(%{job_id: job1.id})
+
+      candidate1 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+
+      candidate2 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
+      candidate3 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+
+      candidate4 =
+        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "4"})
+
+      # Act
+      {:ok, result} =
+        Absinthe.run(
+          @move_candidate_mutation,
+          Wttj.Schema,
+          variables: %{
+            "candidateId" => candidate4.id,
+            "beforeIndex" => candidate1.display_order,
+            "afterIndex" => candidate3.display_order
+          }
+        )
+
+      # Assert
+      assert Enum.map(result.errors, fn error -> error.message end) == [
+               "more than two candidates found within range"
+             ]
     end
   end
 end
