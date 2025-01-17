@@ -4,7 +4,7 @@ import { Candidate } from '../../types'
 function CandidateCard({ candidate }: { candidate: Candidate }) {
   return (
     <Card mb={10}>
-      <Card.Body>[{candidate.displayOrder}]{candidate.email}</Card.Body>
+      <Card.Body>{candidate.email}</Card.Body>
     </Card>
   )
 }

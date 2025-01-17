@@ -7,14 +7,7 @@ import { Candidate, Status } from '../../types'
 import CandidateCard from '../../components/Candidate'
 import { Badge } from '@welcome-ui/badge'
 import { useBoard } from '../../hooks/useBoard'
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-  OnDragEndResponder,
-} from '@hello-pangea/dnd'
-import { gql, useMutation } from '@apollo/client'
+import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd'
 
 interface SortedCandidates {
   [key: string]: Candidate[]
@@ -23,27 +16,6 @@ interface SortedCandidates {
 function JobShow() {
   const { jobId } = useParams<{ jobId: string }>()
   const { loading, error, job, candidates, statuses } = useBoard(jobId!)
-
-  const QUERY = gql`
-    mutation MoveCandidate(
-      $candidateId: ID!
-      $beforeIndex: String
-      $afterIndex: String
-      $destinationStatusId: ID
-    ) {
-      moveCandidate(
-        candidateId: $candidateId
-        beforeIndex: $beforeIndex
-        afterIndex: $afterIndex
-        destinationStatusId: $destinationStatusId
-      ) {
-        id
-        displayOrder
-      }
-    }
-  `
-
-  const [moveCandidate, vars] = useMutation(QUERY)
 
   const sortedCandidates: SortedCandidates = useMemo(() => {
     if (!candidates) return {}
@@ -68,44 +40,7 @@ function JobShow() {
   if (error) return <p>Error : {error.message}</p>
 
   const handleOnDragEnd = (result: DropResult) => {
-    if (result.reason !== 'DROP') return
-    
-    const { draggableId: candidateId, destination } = result
-    const destinationStatusId = destination?.droppableId
-    const index = destination?.index
-    
-    if (!destination || !sortedCandidates.hasOwnProperty(destinationStatusId)) {
-      return moveCandidate({ 
-        variables: {
-          candidateId,
-          beforeIndex: null,
-          afterIndex: null,
-          destinationStatusId
-        }
-      })
-    }
-  
-    const destinationList = sortedCandidates[destinationStatusId]
-    let beforeIndex: string | null = null
-    let afterIndex: string | null = null
-    
-    if (index === destinationList.length) {
-      beforeIndex = destinationList[destinationList.length - 1].displayOrder
-    } else if (index === 0) {
-      afterIndex = destinationList[0].displayOrder
-    } else {
-      beforeIndex = destinationList[index! - 1].displayOrder
-      afterIndex = destinationList[index!].displayOrder
-    }
-  
-    moveCandidate({
-      variables: {
-        candidateId,
-        beforeIndex,
-        afterIndex,
-        destinationStatusId
-      }
-    })
+    console.info({ result })
   }
 
   return (
