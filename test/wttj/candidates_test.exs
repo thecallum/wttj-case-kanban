@@ -87,7 +87,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when checking status" do
     test "returns error when status doesnt belong to job",
-         %{job1: job1, job2: job2, status1: status1, status2: status2, status3: status3} do
+         %{job1: job1, status1: status1, status3: status3} do
       # Arrange
       candidate =
         candidate_fixture(%{
@@ -104,14 +104,13 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when status not found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate =
         candidate_fixture(%{
           job_id: job1.id,
           status_id: status1.id,
           display_order: "1",
-          job_id: job1.id
         })
 
       # Act
@@ -137,7 +136,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate with the same empty list" do
     test "returns error when to same list",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate =
         candidate_fixture(%{
@@ -156,10 +155,9 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate to a different empty list" do
     test "returns error when list isnt empty",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
-      candiate_in_status_1 =
-        candidate_fixture(%{
+      candidate_fixture(%{
           job_id: job1.id,
           status_id: status1.id,
           display_order: "1"
@@ -181,7 +179,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns ok",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate =
         candidate_fixture(%{
@@ -206,7 +204,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate to the beginning of the same list" do
     test "returns ok",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{
@@ -242,14 +240,13 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when more than one display_order found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
-      candidate1 =
-        candidate_fixture(%{
-          job_id: job1.id,
-          status_id: status1.id,
-          display_order: "1"
-        })
+      candidate_fixture(%{
+        job_id: job1.id,
+        status_id: status1.id,
+        display_order: "1"
+      })
 
       candidate2 =
         candidate_fixture(%{
@@ -279,10 +276,9 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when display_order not found in database",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status2: status2} do
       # Arrange
-      candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
+      candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
 
       candidate2 =
         candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
@@ -295,7 +291,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when display_order",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -310,7 +306,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate to the beginning of a different list" do
     test "returns ok",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
@@ -338,10 +334,10 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when more than one display_order found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
-      candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
+
+      candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
 
       candidate2 =
         candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
@@ -363,10 +359,10 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when display_order not found in database",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
-      candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
+
+      candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
 
       candidate2 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "8"})
@@ -379,7 +375,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when no candidates found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -394,7 +390,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate to the end of the same list" do
     test "returns ok",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -422,7 +418,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when more than one candidate found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -430,8 +426,7 @@ defmodule Wttj.CandidatesTest do
       candidate2 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
 
-      candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
 
       # Act
       result =
@@ -447,13 +442,12 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when display_position not found in database",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
 
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
 
       # Act
       result = Candidates.update_candidate_display_order(candidate1.id, "1.5", nil, status2.id)
@@ -463,7 +457,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when no candidates found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -478,7 +472,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate to the end of a different list" do
     test "returns ok",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
@@ -506,7 +500,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when more than one candidate found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -514,8 +508,7 @@ defmodule Wttj.CandidatesTest do
       candidate2 =
         candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "1"})
 
-      candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
 
       # Act
       result =
@@ -531,13 +524,12 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when display_position not found in database",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
 
       # Act
       result = Candidates.update_candidate_display_order(candidate1.id, "1.5", nil, status2.id)
@@ -547,7 +539,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when no candidates found",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -562,7 +554,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate within the same list" do
     test "returns ok",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -593,13 +585,12 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when more than two candidates returned",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
 
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
@@ -621,13 +612,12 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error one of the display positions not found in the database",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
 
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
@@ -648,7 +638,7 @@ defmodule Wttj.CandidatesTest do
 
   describe "update_candidate_display_order/3 when moving a candidate to a different list" do
     test "returns ok",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
@@ -679,13 +669,12 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error when more than two candidates returned",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
 
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
@@ -707,7 +696,7 @@ defmodule Wttj.CandidatesTest do
     end
 
     test "returns error one of the display positions not found in the database",
-         %{job1: job1, job2: job2, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate1 =
         candidate_fixture(%{
@@ -716,12 +705,11 @@ defmodule Wttj.CandidatesTest do
           display_order: "1"
         })
 
-      candidate2 =
-        candidate_fixture(%{
-          job_id: job1.id,
-          status_id: status1.id,
-          display_order: "2"
-        })
+      candidate_fixture(%{
+        job_id: job1.id,
+        status_id: status1.id,
+        display_order: "2"
+      })
 
       candidate3 =
         candidate_fixture(%{

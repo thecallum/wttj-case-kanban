@@ -42,7 +42,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       result = JobTracking.list_jobs(nil, nil, nil)
 
       # Assert
-      assert {:ok, [job1, job2, job3]} = result
+      assert {:ok, [job1, job2, job3]} == result
     end
   end
 
@@ -54,13 +54,13 @@ defmodule Wttj.Resolvers.JobTrackingTest do
 
       status1 = status_fixture(%{job_id: job1.id})
       status2 = status_fixture(%{job_id: job1.id})
-      status3 = status_fixture(%{job_id: job2.id})
+      status_fixture(%{job_id: job2.id})
 
       # Act
       result = JobTracking.list_statuses(nil, %{job_id: job1.id}, nil)
 
       # Assert
-      assert {:ok, [status1, status2]} = result
+      assert {:ok, [status1, status2]} == result
     end
   end
 
@@ -77,7 +77,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       result = JobTracking.list_candidates(nil, %{job_id: job1.id}, nil)
 
       # Assert
-      assert {:ok, [candidate1]} = result
+      assert {:ok, [candidate1]} == result
     end
   end
 

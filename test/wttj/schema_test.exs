@@ -35,7 +35,7 @@ defmodule Wttj.SchemaTest do
              }
     end
 
-    test "returns error when job does not exist", %{conn: conn} do
+    test "returns error when job does not exist" do
       # Arrange
       {:ok, result} =
         Absinthe.run(
@@ -284,10 +284,7 @@ defmodule Wttj.SchemaTest do
 
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
-
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
-
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
 
@@ -323,10 +320,7 @@ defmodule Wttj.SchemaTest do
 
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
-
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
-
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
 
@@ -419,10 +413,8 @@ defmodule Wttj.SchemaTest do
       # Arrange
       job1 = job_fixture()
       status1 = status_fixture(%{job_id: job1.id})
-      status2 = status_fixture(%{job_id: job1.id})
-
-      candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      status_fixture(%{job_id: job1.id})
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
 
       # Act
       {:ok, result} =
@@ -468,7 +460,7 @@ defmodule Wttj.SchemaTest do
     test "returns error when candidate not found" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
+      status_fixture(%{job_id: job1.id})
 
       # Act
       {:ok, result} =
@@ -494,8 +486,7 @@ defmodule Wttj.SchemaTest do
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
-      candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
 
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
