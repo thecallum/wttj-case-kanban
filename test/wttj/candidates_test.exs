@@ -15,7 +15,6 @@ defmodule Wttj.CandidatesTest do
     status2 = status_fixture(%{job_id: job1.id})
     status3 = status_fixture(%{job_id: job2.id})
 
-    # candidate1 = candidate_fixture(%{job_id: job2.id, status_id: status1.id, display_order: "1"})
     {:ok, job1: job1, job2: job2, status1: status1, status2: status2, status3: status3}
   end
 
