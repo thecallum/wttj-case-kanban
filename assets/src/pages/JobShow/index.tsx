@@ -7,7 +7,7 @@ import { Candidate, Status } from '../../types'
 import CandidateCard from '../../components/Candidate'
 import { Badge } from '@welcome-ui/badge'
 import { useBoard } from '../../hooks/useBoard'
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
+import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd'
 
 interface SortedCandidates {
   [key: string]: Candidate[]
@@ -26,7 +26,9 @@ function JobShow() {
     })
 
     return candidates.reduce<SortedCandidates>((acc, c: Candidate) => {
-      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort((a, b) => a.position - b.position)
+      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort(
+        (a, b) => parseFloat(a.displayOrder) - parseFloat(b.displayOrder)
+      )
       return acc
     }, {})
   }, [candidates])
@@ -37,8 +39,8 @@ function JobShow() {
 
   if (error) return <p>Error : {error.message}</p>
 
-  const handleOnDragEnd = e => {
-    console.log('onDragEnd', { e })
+  const handleOnDragEnd = (result: DropResult) => {
+    console.info({ result })
   }
 
   return (
@@ -75,14 +77,14 @@ function JobShow() {
                   <Badge>{(sortedCandidates[status.id] || []).length}</Badge>
                 </Flex>
 
-                <Droppable droppableId={`droppable-${status.id}`}>
+                <Droppable droppableId={`${status.id}`}>
                   {provided => (
                     <div {...provided.droppableProps} ref={provided.innerRef}>
                       <Flex direction="column" p={10} pb={0}>
                         {sortedCandidates[status.id]?.map((candidate: Candidate, index: number) => (
                           <Draggable
                             key={candidate.id}
-                            draggableId={`draggable-${candidate.id}`}
+                            draggableId={`${candidate.id}`}
                             index={index}
                           >
                             {provided => (

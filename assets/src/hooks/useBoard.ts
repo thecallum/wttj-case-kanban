@@ -1,6 +1,6 @@
 import { useQuery } from '@apollo/client'
-import { Candidate, Job, Status } from '../api'
 import { GET_BOARD } from '../graphql/queries/getBoard'
+import { Candidate, Job, Status } from '../types'
 
 export const useBoard = (jobId: string) => {
   const { loading, error, data } = useQuery<{

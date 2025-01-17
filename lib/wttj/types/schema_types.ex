@@ -1,5 +1,19 @@
 defmodule Wttj.Types.SchemaTypes do
   use Absinthe.Schema.Notation
+  alias Wttj.Validation.DisplayOrder
+
+  defp parse_display_order_type(%{value: value}) do
+    case DisplayOrder.validate_display_order_type(value) do
+      {:ok} -> {:ok, value}
+      {:error, message} -> {:error, message}
+    end
+  end
+
+  @desc "A string representing a float (e.g. '1', '2.5', '10.99'), cannot be '0'"
+  scalar :display_order do
+    parse(&parse_display_order_type/1)
+    serialize(fn value -> value end)
+  end
 
   @desc "Contains the details of a specific job"
   object :job do
@@ -19,6 +33,7 @@ defmodule Wttj.Types.SchemaTypes do
   object :candidate do
     field :id, :id
     field :position, :integer
+    field :display_order, :display_order
     field :email, :string
     field :job_id, :id
     field :status_id, :id

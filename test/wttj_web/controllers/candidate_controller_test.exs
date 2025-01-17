@@ -54,7 +54,7 @@ defmodule WttjWeb.CandidateControllerTest do
   end
 
   defp create_candidate(%{job: job, status: status}) do
-    candidate = candidate_fixture(%{job_id: job.id, status_id: status.id})
+    candidate = candidate_fixture(%{job_id: job.id, status_id: status.id, display_order: "1"})
     %{candidate: candidate}
   end
 end

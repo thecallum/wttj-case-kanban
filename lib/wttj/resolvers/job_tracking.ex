@@ -28,4 +28,16 @@ defmodule Wttj.Resolvers.JobTracking do
     {:ok, candidates}
   end
 
+  def move_candidate(_parent, args, _resolution) do
+
+    case Candidates.update_candidate_display_order(
+      args[:candidate_id],
+      args[:before_index],
+      args[:after_index],
+      args[:destination_status_id]
+    ) do
+      {:ok, candidate} -> {:ok, candidate}
+      {:error, error} -> {:error, error}
+    end
+  end
 end

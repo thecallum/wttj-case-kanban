@@ -1,7 +1,6 @@
 defmodule Wttj.Schema do
   use Absinthe.Schema
   import_types Wttj.Types.SchemaTypes
-
   alias Wttj.Resolvers
 
   query do
@@ -26,6 +25,17 @@ defmodule Wttj.Schema do
     field :candidates, list_of(:candidate) do
       arg :job_id, non_null(:id)
       resolve &Resolvers.JobTracking.list_candidates/3
+    end
+  end
+
+  mutation do
+    @desc "Move a candidate to a different position"
+    field :move_candidate, type: :candidate do
+      arg :candidate_id, non_null(:id)
+      arg :before_index, :display_order
+      arg :after_index, :display_order
+      arg :destination_status_id, :id
+      resolve &Resolvers.JobTracking.move_candidate/3
     end
   end
 end
