@@ -8,6 +8,9 @@ defmodule Wttj.Types.SchemaTypes do
       {:error, message} -> {:error, message}
     end
   end
+  defp parse_display_order_type(%Absinthe.Blueprint.Input.Null{}) do
+    {:ok, nil}
+  end
 
   @desc "A string representing a float (e.g. '1', '2.5', '10.99'), cannot be '0'"
   scalar :display_order do
