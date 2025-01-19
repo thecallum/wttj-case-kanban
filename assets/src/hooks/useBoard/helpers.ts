@@ -17,52 +17,65 @@ export const verifyCandidateMoved = (
 }
 
 export const calculateTempNewDisplayPosition = (
+  previousCandidate: Candidate | null,
+  nextCandidate: Candidate | null
+) => {
+  if (previousCandidate === null && nextCandidate === null) {
+    return 1
+  }
+
+  if (previousCandidate === null) {
+    // Move to top of list
+    return parseFloat(nextCandidate!.displayOrder) / 2
+  }
+
+  if (nextCandidate === null) {
+    // Move to bottom of list
+    return parseFloat(previousCandidate!.displayOrder) + 1
+  }
+
+  // Calculate middle point between before and after
+  return (parseFloat(previousCandidate?.displayOrder) + parseFloat(nextCandidate?.displayOrder)) / 2
+}
+
+export const getSibblingCandidates = (
   sortedCandidates: SortedCandidates,
   dropResult: DropResult
 ) => {
   const { destination, source } = dropResult
   const { index: destinationIndex, droppableId: destinationColumnId } = destination!
 
-  if (!Object.prototype.hasOwnProperty.call(sortedCandidates, destinationColumnId)) {
-    //  empty column, set as 1
-    return 1
+  if (!sortedCandidates[destinationColumnId]) {
+    return { previousCandidate: null, nextCandidate: null }
   }
 
   const destinationList = sortedCandidates[destinationColumnId]
 
-  const isMovingDown = destinationIndex! > source.index
-  const isMovingToSameList = source.droppableId === destination?.droppableId
-  // When moving down within the same list, we need to take into account the
-  // index of the item being moved (its still in sortedCandidates)
-  const indexOffset = isMovingDown && isMovingToSameList ? 1 : 0
+  const indexOffset = calculateIndexOffset(source, destination)
 
-  const { nextCandidate, previousCandidate } = getSibblingCandidates(
-    destinationList,
-    destinationIndex! + indexOffset
-  )
+  const previousCandidateIndex = destinationIndex! + indexOffset - 1
+  const nextCandidateIndex = destinationIndex! + indexOffset
 
-  // Move to bottom of list
-  if (nextCandidate == null) return parseFloat(previousCandidate!.displayOrder) + 1
-  // Move to top of list
-  if (previousCandidate == null) return parseFloat(nextCandidate!.displayOrder) / 2
-
-  // Calculate middle point between before and after
-  return (parseFloat(previousCandidate?.displayOrder) + parseFloat(nextCandidate?.displayOrder)) / 2
+  return {
+    previousCandidate: getCandidateAtIndex(destinationList, previousCandidateIndex),
+    nextCandidate: getCandidateAtIndex(destinationList, nextCandidateIndex),
+  }
 }
 
-const getSibblingCandidates = (destinationList: Candidate[], destinationIndex: number) => {
-  const previousCandidateIndex = destinationIndex! - 1
-  const nextCandidateIndex = destinationIndex!
+const calculateIndexOffset = (
+  source: DraggableLocation<string>,
+  destination: DraggableLocation<string> | null
+) => {
+  const isMovingDown = destination!.index > source.index
+  const isMovingToSameList = source.droppableId === destination?.droppableId
 
-  const previousCandidate = Object.prototype.hasOwnProperty.call(
-    destinationList,
-    previousCandidateIndex
-  )
-    ? destinationList[previousCandidateIndex]
-    : null
-  const nextCandidate = Object.prototype.hasOwnProperty.call(destinationList, nextCandidateIndex)
-    ? destinationList[nextCandidateIndex]
-    : null
+  const indexOffset = isMovingDown && isMovingToSameList ? 1 : 0
+  // When moving down within the same list, we need to take into account the
+  // index of the item being moved (its still in sortedCandidates)
 
-  return { previousCandidate, nextCandidate }
+  return indexOffset
+}
+
+const getCandidateAtIndex = (candidateList: Candidate[], index: number) => {
+  return Object.prototype.hasOwnProperty.call(candidateList, index) ? candidateList[index] : null
 }

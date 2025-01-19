@@ -10,7 +10,7 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 
 function JobShow() {
   const { jobId } = useParams<{ jobId: string }>()
-  const { loading, error, job, sortedCandidates, statuses, handleOnDragEnd } = useBoard(jobId!)
+  const { loading, error, job, sortedCandidates, statuses, handleOnDragEnd, updateCandiateData } = useBoard(jobId!)
 
   if (loading) {
     return null
@@ -28,7 +28,7 @@ function JobShow() {
 
 
       {/* <pre>
-        {JSON.stringify(candidates, null, 2)}
+        {JSON.stringify(updateCandiateData, null, 2)}
       </pre> */}
 
       <DragDropContext onDragEnd={handleOnDragEnd}>

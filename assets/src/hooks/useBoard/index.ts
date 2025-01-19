@@ -1,10 +1,15 @@
-import { useQuery } from '@apollo/client'
+import { useMutation, useQuery } from '@apollo/client'
 import { GET_BOARD } from '../../graphql/queries/getBoard'
 import { Candidate, Job, Status } from '../../types'
 import { useEffect, useMemo, useState } from 'react'
 import { DropResult } from '@hello-pangea/dnd'
 import { SortedCandidates } from './types'
-import { calculateTempNewDisplayPosition, verifyCandidateMoved } from './helpers'
+import {
+  calculateTempNewDisplayPosition,
+  getSibblingCandidates,
+  verifyCandidateMoved,
+} from './helpers'
+import { UPDATE_CANDIDATE } from '../../graphql/queries/updateCandiate'
 
 export const useBoard = (jobId: string) => {
   const { loading, error, data } = useQuery<{
@@ -14,6 +19,8 @@ export const useBoard = (jobId: string) => {
   }>(GET_BOARD, {
     variables: { jobId },
   })
+
+  const [updateCandiate, updateCandiateData] = useMutation(UPDATE_CANDIDATE)
 
   useEffect(() => {
     setJob(() => data?.job ?? null)
@@ -60,12 +67,18 @@ export const useBoard = (jobId: string) => {
 
     if (!verifyCandidateMoved(source, destination)) return
 
-    const newDisplayOrder = calculateTempNewDisplayPosition(sortedCandidates, dropResult)
-    updateCandidatePosition(
-      parseInt(draggableId),
-      newDisplayOrder,
-      parseInt(destination!.droppableId)
-    )
+    const { previousCandidate, nextCandidate } = getSibblingCandidates(sortedCandidates, dropResult)
+
+    const tempNewDisplayPosition = calculateTempNewDisplayPosition(previousCandidate, nextCandidate)
+
+    const candidateId = parseInt(draggableId)
+    const destinationStatusId = parseInt(destination!.droppableId)
+    const beforeIndex = previousCandidate?.displayOrder ?? null
+    const afterIndex = nextCandidate?.displayOrder ?? null
+
+    updateCandidatePosition(candidateId, tempNewDisplayPosition, destinationStatusId)
+
+    updateCandiate({ variables: { candidateId, destinationStatusId, beforeIndex, afterIndex } })
   }
 
   return {
@@ -75,5 +88,10 @@ export const useBoard = (jobId: string) => {
     statuses,
     sortedCandidates,
     handleOnDragEnd,
+    updateCandiateData: [
+      updateCandiateData?.data,
+      updateCandiateData?.loading,
+      updateCandiateData?.error,
+    ],
   }
 }
