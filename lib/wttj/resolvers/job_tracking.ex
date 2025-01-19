@@ -29,15 +29,20 @@ defmodule Wttj.Resolvers.JobTracking do
   end
 
   def move_candidate(_parent, args, _resolution) do
+    with {:ok, candidate} <-
+           Candidates.update_candidate_display_order(
+             args[:candidate_id],
+             args[:before_index],
+             args[:after_index],
+             args[:destination_status_id]
+           ) do
+      Absinthe.Subscription.publish(
+        WttjWeb.Endpoint,
+        candidate,
+        candidate_moved: "candidate_moved:#{candidate.job_id}"
+      )
 
-    case Candidates.update_candidate_display_order(
-      args[:candidate_id],
-      args[:before_index],
-      args[:after_index],
-      args[:destination_status_id]
-    ) do
-      {:ok, candidate} -> {:ok, candidate}
-      {:error, error} -> {:error, error}
+      {:ok, candidate}
     end
   end
 end

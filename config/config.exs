@@ -19,7 +19,7 @@ config :wttj, WttjWeb.Endpoint,
     formats: [html: WttjWeb.ErrorHTML, json: WttjWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Wttj.PubSub,
+  pubsub_server: :wttj_pubsub,
   live_view: [signing_salt: "HckvAo0X"]
 
 # Configures the mailer
@@ -35,6 +35,8 @@ config :wttj, Wttj.Mailer, adapter: Swoosh.Adapters.Local
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
+# config :absinthe, :schema, Wttj.Schema
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason

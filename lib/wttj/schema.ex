@@ -38,4 +38,18 @@ defmodule Wttj.Schema do
       resolve &Resolvers.JobTracking.move_candidate/3
     end
   end
+
+  subscription do
+    field :candidate_moved, :candidate do
+      arg :job_id, non_null(:id)
+
+      config fn args, _res ->
+        {:ok, topic: "candidate_moved:#{args.job_id}"}
+      end
+
+      trigger :move_candidate, topic: fn candidate ->
+        "candidate_moved:#{candidate.job_id}"
+      end
+    end
+  end
 end
