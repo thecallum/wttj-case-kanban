@@ -1,15 +1,16 @@
-import { ApolloError, useMutation, useQuery } from '@apollo/client'
+import { ApolloError, useMutation, useQuery, useSubscription } from '@apollo/client'
 import { GET_BOARD } from '../../graphql/queries/getBoard'
 import { Candidate, Job, Status } from '../../types'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DropResult } from '@hello-pangea/dnd'
 import {
   calculateTempNewDisplayPosition,
   getSibblingCandidates,
   verifyCandidateMoved,
 } from './helpers'
-import { UPDATE_CANDIDATE } from '../../graphql/queries/updateCandiate'
+import { UPDATE_CANDIDATE } from '../../graphql/mutations/updateCandiate'
 import { useSortedCandidates } from './useSortedCandidates'
+import { CANDIDATE_MOVED } from '../../graphql/subscriptions/candidateMoved'
 
 export const useBoard = (jobId: string) => {
   const { loading, error, data } = useQuery<{
@@ -18,6 +19,26 @@ export const useBoard = (jobId: string) => {
     statuses: Status[]
   }>(GET_BOARD, {
     variables: { jobId },
+  })
+
+  useSubscription<{ candidateMoved: Candidate }>(CANDIDATE_MOVED, {
+    variables: {
+      jobId,
+    },
+    onComplete: () => {
+      console.log('complete', { data })
+    },
+    onData: data => {
+      // console.log('ondata', { data })
+
+      const updatedCandidate = data.data.data?.candidateMoved
+
+      const { id, displayOrder, statusId } = updatedCandidate!
+
+      // console.log(id, email, displayOrder, statusId)
+
+      updateCandidatePosition(id, displayOrder, statusId)
+    },
   })
 
   const handleOnUpdateError = (error: ApolloError) => {
@@ -106,11 +127,12 @@ export const useBoard = (jobId: string) => {
 
     // ToDo - remove me
     // Added to simulate occasional errors
-    const randomCauseError = Math.random() < 0.25
+    // const randomCauseError = Math.random() < 0.25
 
     updateCandiate({
       variables: {
-        candidateId: randomCauseError ? 123123 : candidateId,
+        // candidateId: randomCauseError ? 123123 : candidateId,
+        candidateId,
         destinationStatusId,
         beforeIndex,
         afterIndex,
