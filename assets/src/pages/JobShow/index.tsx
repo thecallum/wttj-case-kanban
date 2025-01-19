@@ -10,7 +10,8 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 
 function JobShow() {
   const { jobId } = useParams<{ jobId: string }>()
-  const { loading, error, job, sortedCandidates, statuses, handleOnDragEnd, updateCandiateData } = useBoard(jobId!)
+  const { loading, error, job, sortedCandidates, statuses, handleOnDragEnd, updateError } =
+    useBoard(jobId!)
 
   if (loading) {
     return null
@@ -25,11 +26,6 @@ function JobShow() {
           {job?.name}
         </Text>
       </Box>
-
-
-      {/* <pre>
-        {JSON.stringify(updateCandiateData, null, 2)}
-      </pre> */}
 
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <Box p={20}>
@@ -89,6 +85,21 @@ function JobShow() {
           </Flex>
         </Box>
       </DragDropContext>
+
+      {updateError && (
+        <div
+          style={{
+            background: '#fecaca',
+            display: 'inline-block',
+            marginLeft: 20,
+            padding: '5px 10px',
+            borderRadius: 5,
+            color: '#dc2626',
+          }}
+        >
+          An error occurred updating candidate: "{updateError}"
+        </div>
+      )}
     </>
   )
 }

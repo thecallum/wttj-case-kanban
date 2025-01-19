@@ -34,6 +34,10 @@ export const useBoard = (jobId: string) => {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [statuses, setStatuses] = useState<Status[]>([])
 
+  // Used to revert candidate when an error occurs
+  const [candidateSnapshot, setCandidateSnapshot] = useState<Candidate | null>(null)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+
   const sortedCandidates: SortedCandidates = useMemo(() => {
     if (!candidates) return {}
 
@@ -71,6 +75,15 @@ export const useBoard = (jobId: string) => {
 
     const { previousCandidate, nextCandidate } = getSibblingCandidates(sortedCandidates, dropResult)
 
+    // store snapshot of current state, so candidate can be reverted
+    // if update fails
+    const candidate = sortedCandidates[source.droppableId][source.index]
+    setCandidateSnapshot(candidate)
+
+    // We're using optimistic UI updates. This means, the UI will be updated before we get a response
+    // We dont know what the new display posiiton will be yet, so we're setting a temporary one
+    // If the update is successful, it will be overwritten
+    // Else, it will be reverted
     const tempNewDisplayPosition = calculateTempNewDisplayPosition(previousCandidate, nextCandidate)
 
     const candidateId = parseInt(draggableId)
@@ -80,7 +93,18 @@ export const useBoard = (jobId: string) => {
 
     updateCandidatePosition(candidateId, tempNewDisplayPosition, destinationStatusId)
 
-    updateCandiate({ variables: { candidateId, destinationStatusId, beforeIndex, afterIndex } })
+    // ToDo - remove me
+    // Added to simulate occasional errors
+    const randomCauseError = Math.random() < 0.25
+
+    updateCandiate({
+      variables: {
+        candidateId: randomCauseError ? 123123 : candidateId,
+        destinationStatusId,
+        beforeIndex,
+        afterIndex,
+      },
+    })
   }
 
   useEffect(() => {
@@ -89,8 +113,29 @@ export const useBoard = (jobId: string) => {
 
     const { id, displayOrder, statusId } = updateCandiateData.moveCandidate
 
+    console.log('gonna update')
+
     updateCandidatePosition(id, displayOrder, statusId)
   }, [updateCandiateData])
+
+  useEffect(() => {
+    if (!updateCandidateError) {
+      setUpdateError(null)
+      return
+    }
+
+    console.error('New error occurred when updating candidate', { updateCandidateError })
+
+    setUpdateError(updateCandidateError.message)
+
+    console.log('previous state', { candidateSnapshot })
+    // revert candidate back to previous position
+    updateCandidatePosition(
+      candidateSnapshot!.id,
+      candidateSnapshot!.displayOrder,
+      candidateSnapshot!.statusId
+    )
+  }, [updateCandidateError])
 
   return {
     loading,
@@ -99,6 +144,6 @@ export const useBoard = (jobId: string) => {
     statuses,
     sortedCandidates,
     handleOnDragEnd,
-    updateCandiateData: [updateCandiateData, updateCandidateError],
+    updateError,
   }
 }
