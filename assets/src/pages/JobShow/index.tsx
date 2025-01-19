@@ -2,46 +2,21 @@ import { useParams } from 'react-router-dom'
 import { Text } from '@welcome-ui/text'
 import { Flex } from '@welcome-ui/flex'
 import { Box } from '@welcome-ui/box'
-import { useMemo } from 'react'
-import { Candidate, Status } from '../../types'
+import { Candidate } from '../../types'
 import CandidateCard from '../../components/Candidate'
 import { Badge } from '@welcome-ui/badge'
 import { useBoard } from '../../hooks/useBoard'
-import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd'
-
-interface SortedCandidates {
-  [key: string]: Candidate[]
-}
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 
 function JobShow() {
   const { jobId } = useParams<{ jobId: string }>()
-  const { loading, error, job, candidates, statuses } = useBoard(jobId!)
-
-  const sortedCandidates: SortedCandidates = useMemo(() => {
-    if (!candidates) return {}
-
-    const statusesById: { [key: number]: Status } = {}
-    statuses?.forEach(status => {
-      statusesById[status.id] = status
-    })
-
-    return candidates.reduce<SortedCandidates>((acc, c: Candidate) => {
-      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort(
-        (a, b) => parseFloat(a.displayOrder) - parseFloat(b.displayOrder)
-      )
-      return acc
-    }, {})
-  }, [candidates])
+  const { loading, error, job, sortedCandidates, candidates, statuses, handleOnDragEnd } = useBoard(jobId!)
 
   if (loading) {
     return null
   }
 
   if (error) return <p>Error : {error.message}</p>
-
-  const handleOnDragEnd = (result: DropResult) => {
-    console.info({ result })
-  }
 
   return (
     <>
@@ -50,6 +25,11 @@ function JobShow() {
           {job?.name}
         </Text>
       </Box>
+
+
+      {/* <pre>
+        {JSON.stringify(candidates, null, 2)}
+      </pre> */}
 
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <Box p={20}>
