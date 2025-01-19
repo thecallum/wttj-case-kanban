@@ -3,13 +3,13 @@ import { GET_BOARD } from '../../graphql/queries/getBoard'
 import { Candidate, Job, Status } from '../../types'
 import { useEffect, useMemo, useState } from 'react'
 import { DropResult } from '@hello-pangea/dnd'
-import { SortedCandidates } from './types'
 import {
   calculateTempNewDisplayPosition,
   getSibblingCandidates,
   verifyCandidateMoved,
 } from './helpers'
 import { UPDATE_CANDIDATE } from '../../graphql/queries/updateCandiate'
+import { useSortedCandidates } from './useSortedCandidates'
 
 export const useBoard = (jobId: string) => {
   const { loading, error, data } = useQuery<{
@@ -38,21 +38,7 @@ export const useBoard = (jobId: string) => {
   const [candidateSnapshot, setCandidateSnapshot] = useState<Candidate | null>(null)
   const [updateError, setUpdateError] = useState<string | null>(null)
 
-  const sortedCandidates: SortedCandidates = useMemo(() => {
-    if (!candidates) return {}
-
-    const statusesById: { [key: number]: Status } = {}
-    statuses?.forEach(status => {
-      statusesById[status.id] = status
-    })
-
-    return candidates.reduce<SortedCandidates>((acc, c: Candidate) => {
-      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort((left, right) => {
-        return parseFloat(left.displayOrder!) - parseFloat(right.displayOrder!)
-      })
-      return acc
-    }, {})
-  }, [candidates])
+  const sortedCandidates = useSortedCandidates(candidates, statuses)
 
   const updateCandidatePosition = (candidateId: number, displayOrder: string, statusId: number) => {
     setCandidates(data => {
