@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client'
+import { ApolloError, useMutation, useQuery } from '@apollo/client'
 import { GET_BOARD } from '../../graphql/queries/getBoard'
 import { Candidate, Job, Status } from '../../types'
 import { useEffect, useMemo, useState } from 'react'
@@ -20,9 +20,34 @@ export const useBoard = (jobId: string) => {
     variables: { jobId },
   })
 
-  const [updateCandiate, { data: updateCandiateData, error: updateCandidateError }] = useMutation<{
+  const handleOnUpdateError = (error: ApolloError) => {
+    console.error('New error occurred when updating candidate', { error })
+
+    setUpdateError(error.message)
+
+    // revert candidate back to previous position
+    updateCandidatePosition(
+      candidateSnapshot!.id,
+      candidateSnapshot!.displayOrder,
+      candidateSnapshot!.statusId
+    )
+  }
+
+  const handleOnUpdateSuccess = (data: { moveCandidate: Candidate }) => {
+    // reset error
+    setUpdateError(null)
+
+    const { id, displayOrder, statusId } = data.moveCandidate
+
+    updateCandidatePosition(id, displayOrder, statusId)
+  }
+
+  const [updateCandiate] = useMutation<{
     moveCandidate: Candidate
-  }>(UPDATE_CANDIDATE)
+  }>(UPDATE_CANDIDATE, {
+    onCompleted: handleOnUpdateSuccess,
+    onError: handleOnUpdateError,
+  })
 
   useEffect(() => {
     setJob(() => data?.job ?? null)
@@ -92,36 +117,6 @@ export const useBoard = (jobId: string) => {
       },
     })
   }
-
-  useEffect(() => {
-    // data is set as undefined before the result is set
-    if (!updateCandiateData) return
-
-    const { id, displayOrder, statusId } = updateCandiateData.moveCandidate
-
-    console.log('gonna update')
-
-    updateCandidatePosition(id, displayOrder, statusId)
-  }, [updateCandiateData])
-
-  useEffect(() => {
-    if (!updateCandidateError) {
-      setUpdateError(null)
-      return
-    }
-
-    console.error('New error occurred when updating candidate', { updateCandidateError })
-
-    setUpdateError(updateCandidateError.message)
-
-    console.log('previous state', { candidateSnapshot })
-    // revert candidate back to previous position
-    updateCandidatePosition(
-      candidateSnapshot!.id,
-      candidateSnapshot!.displayOrder,
-      candidateSnapshot!.statusId
-    )
-  }, [updateCandidateError])
 
   return {
     loading,
