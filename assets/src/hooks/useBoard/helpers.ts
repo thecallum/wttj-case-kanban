@@ -21,21 +21,24 @@ export const calculateTempNewDisplayPosition = (
   nextCandidate: Candidate | null
 ) => {
   if (previousCandidate === null && nextCandidate === null) {
-    return 1
+    return '1'
   }
 
   if (previousCandidate === null) {
     // Move to top of list
-    return parseFloat(nextCandidate!.displayOrder) / 2
+    return (parseFloat(nextCandidate!.displayOrder) / 2).toString()
   }
 
   if (nextCandidate === null) {
     // Move to bottom of list
-    return parseFloat(previousCandidate!.displayOrder) + 1
+    return (parseFloat(previousCandidate!.displayOrder) + 1).toString()
   }
 
   // Calculate middle point between before and after
-  return (parseFloat(previousCandidate?.displayOrder) + parseFloat(nextCandidate?.displayOrder)) / 2
+  return (
+    (parseFloat(previousCandidate?.displayOrder) + parseFloat(nextCandidate?.displayOrder)) /
+    2
+  ).toString()
 }
 
 export const getSibblingCandidates = (

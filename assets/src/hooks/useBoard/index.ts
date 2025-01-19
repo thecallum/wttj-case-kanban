@@ -20,7 +20,9 @@ export const useBoard = (jobId: string) => {
     variables: { jobId },
   })
 
-  const [updateCandiate, updateCandiateData] = useMutation(UPDATE_CANDIDATE)
+  const [updateCandiate, { data: updateCandiateData, error: updateCandidateError }] = useMutation<{
+    moveCandidate: Candidate
+  }>(UPDATE_CANDIDATE)
 
   useEffect(() => {
     setJob(() => data?.job ?? null)
@@ -48,14 +50,14 @@ export const useBoard = (jobId: string) => {
     }, {})
   }, [candidates])
 
-  const updateCandidatePosition = (candidateId: number, displayOrder: number, statusId: number) => {
+  const updateCandidatePosition = (candidateId: number, displayOrder: string, statusId: number) => {
     setCandidates(data => {
       return data.map(x => {
         if (x.id != candidateId) return x
 
         return {
           ...x,
-          displayOrder: displayOrder.toString(),
+          displayOrder,
           statusId,
         }
       })
@@ -81,6 +83,15 @@ export const useBoard = (jobId: string) => {
     updateCandiate({ variables: { candidateId, destinationStatusId, beforeIndex, afterIndex } })
   }
 
+  useEffect(() => {
+    // data is set as undefined before the result is set
+    if (!updateCandiateData) return
+
+    const { id, displayOrder, statusId } = updateCandiateData.moveCandidate
+
+    updateCandidatePosition(id, displayOrder, statusId)
+  }, [updateCandiateData])
+
   return {
     loading,
     error,
@@ -88,10 +99,6 @@ export const useBoard = (jobId: string) => {
     statuses,
     sortedCandidates,
     handleOnDragEnd,
-    updateCandiateData: [
-      updateCandiateData?.data,
-      updateCandiateData?.loading,
-      updateCandiateData?.error,
-    ],
+    updateCandiateData: [updateCandiateData, updateCandidateError],
   }
 }
