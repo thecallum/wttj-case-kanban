@@ -2,6 +2,7 @@ defmodule WttjWeb.Endpoint do
   use Phoenix.Endpoint,
     otp_app: :wttj,
     pubsub_server: :wttj_pubsub
+
   use Absinthe.Phoenix.Endpoint
 
   # The session will be stored in the cookie and signed,
@@ -18,13 +19,13 @@ defmodule WttjWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
-
   socket "/socket", WttjWeb.JobSocket,
-    websocket: true,
+    websocket: [
+      connect_info: [:x_headers],
+      # Add your frontend origin
+      check_origin: ["http://localhost:5173"]
+    ],
     longpoll: false
-
-
-
 
   # Serve at "/" the static files from "priv/static" directory.
   #
