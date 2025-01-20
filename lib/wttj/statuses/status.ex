@@ -17,7 +17,7 @@ defmodule Wttj.Statuses.Status do
   @doc false
   def changeset(status, attrs) do
     status
-    |> cast(attrs, [:label, :position, :job_id])
+    |> cast(attrs, [:label, :lock_version, :position, :job_id])
     |> validate_required([:label, :position, :job_id])
   end
 end
