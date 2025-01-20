@@ -8,6 +8,7 @@ defmodule Wttj.Statuses.Status do
     field :position, :integer
     field :job_id, :id
 
+    field :lock_version, :integer, default: 1
     has_many :candidates, Candidate
 
     timestamps(type: :utc_datetime)
