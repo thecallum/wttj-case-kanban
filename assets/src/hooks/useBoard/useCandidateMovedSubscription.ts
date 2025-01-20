@@ -6,7 +6,8 @@ import { Candidate } from '../../types'
 export const useCandidateMovedSubscription = (
   jobId: string,
   clientId: string,
-  onCandidateMoved: (candidate: Candidate) => void
+  onCandidateMoved: (candidate: Candidate) => void,
+  onStatusUpdate: (statusId: number, newVersion: number) => void
 ) => {
   const handleOnSubscriptionData = (data: OnDataOptions<CandidateMovedSubscription>) => {
     const candidateMoved = data.data.data!.candidateMoved
@@ -15,6 +16,10 @@ export const useCandidateMovedSubscription = (
     if (clientId === candidateMoved.clientId) return
 
     onCandidateMoved(candidateMoved.candidate)
+
+    const { sourceStatus, destinationStatus } = candidateMoved
+    onStatusUpdate(sourceStatus.id, sourceStatus.lockVersion)
+    onStatusUpdate(destinationStatus.id, destinationStatus.lockVersion)
   }
 
   useSubscription<CandidateMovedSubscription>(CANDIDATE_MOVED, {
