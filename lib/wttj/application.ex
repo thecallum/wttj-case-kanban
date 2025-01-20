@@ -11,13 +11,14 @@ defmodule Wttj.Application do
       WttjWeb.Telemetry,
       Wttj.Repo,
       {DNSCluster, query: Application.get_env(:wttj, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Wttj.PubSub},
+      {Phoenix.PubSub, name: :wttj_pubsub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Wttj.Finch},
       # Start a worker by calling: Wttj.Worker.start_link(arg)
       # {Wttj.Worker, arg},
       # Start to serve requests, typically the last entry
-      WttjWeb.Endpoint
+      WttjWeb.Endpoint,
+      {Absinthe.Subscription, WttjWeb.Endpoint}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

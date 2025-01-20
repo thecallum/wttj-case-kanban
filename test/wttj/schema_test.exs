@@ -232,8 +232,8 @@ defmodule Wttj.SchemaTest do
 
   describe "mutation :move_candidate" do
     @move_candidate_mutation """
-      mutation MoveCandidate($candidateId: ID!, $beforeIndex: DisplayOrder, $afterIndex: DisplayOrder, $destinationStatusId: ID) {
-        moveCandidate(candidateId: $candidateId, beforeIndex: $beforeIndex, afterIndex: $afterIndex, destinationStatusId: $destinationStatusId) {
+      mutation MoveCandidate($candidateId: ID! $beforeIndex: DisplayOrder, $afterIndex: DisplayOrder, $destinationStatusId: ID, $clientId: String!) {
+        moveCandidate(candidateId: $candidateId, beforeIndex: $beforeIndex, afterIndex: $afterIndex, destinationStatusId: $destinationStatusId, clientId: $clientId) {
           email
           id
           jobId
@@ -243,6 +243,7 @@ defmodule Wttj.SchemaTest do
         }
       }
     """
+    @client_id "1234abcd"
 
     test "returns ok when moving candidate to empty list" do
       # Arrange
@@ -260,7 +261,8 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate1.id,
-            "destinationStatusId" => status2.id
+            "destinationStatusId" => status2.id,
+            "clientId" => @client_id
           }
         )
 
@@ -295,8 +297,8 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate3.id,
-            "afterIndex" => candidate1.display_order
-            # "destinationStatusId" => status2.id
+            "afterIndex" => candidate1.display_order,
+            "clientId" => @client_id
           }
         )
 
@@ -331,7 +333,8 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate1.id,
-            "beforeIndex" => candidate3.display_order
+            "beforeIndex" => candidate3.display_order,
+            "clientId" => @client_id
           }
         )
 
@@ -370,7 +373,8 @@ defmodule Wttj.SchemaTest do
           variables: %{
             "candidateId" => candidate1.id,
             "beforeIndex" => candidate2.display_order,
-            "afterIndex" => candidate3.display_order
+            "afterIndex" => candidate3.display_order,
+            "clientId" => @client_id
           }
         )
 
@@ -398,7 +402,8 @@ defmodule Wttj.SchemaTest do
           variables: %{
             "candidateId" => 100,
             "beforeIndex" => "1.2s",
-            "afterIndex" => "abcd"
+            "afterIndex" => "abcd",
+            "clientId" => @client_id
           }
         )
 
@@ -420,7 +425,10 @@ defmodule Wttj.SchemaTest do
       {:ok, result} =
         Absinthe.run(
           @move_candidate_mutation,
-          Wttj.Schema
+          Wttj.Schema,
+          variables: %{
+            "clientId" => @client_id
+          }
         )
 
       # Assert
@@ -447,7 +455,8 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate1.id,
-            "destinationStatusId" => status2.id
+            "destinationStatusId" => status2.id,
+            "clientId" => @client_id
           }
         )
 
@@ -468,7 +477,8 @@ defmodule Wttj.SchemaTest do
           @move_candidate_mutation,
           Wttj.Schema,
           variables: %{
-            "candidateId" => 100
+            "candidateId" => 100,
+            "clientId" => @client_id
           }
         )
 
@@ -502,7 +512,8 @@ defmodule Wttj.SchemaTest do
           variables: %{
             "candidateId" => candidate4.id,
             "beforeIndex" => candidate1.display_order,
-            "afterIndex" => candidate3.display_order
+            "afterIndex" => candidate3.display_order,
+            "clientId" => @client_id
           }
         )
 

@@ -19,7 +19,7 @@ config :wttj, WttjWeb.Endpoint,
     formats: [html: WttjWeb.ErrorHTML, json: WttjWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Wttj.PubSub,
+  pubsub_server: :wttj_pubsub,
   live_view: [signing_salt: "HckvAo0X"]
 
 # Configures the mailer

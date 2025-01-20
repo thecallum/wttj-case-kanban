@@ -5,8 +5,11 @@ defmodule Wttj.Resolvers.JobTrackingTest do
   import Wttj.JobsFixtures
   import Wttj.StatusesFixtures
   import Wttj.CandidatesFixtures
+  import Mox
 
   # These tests should probably be mocked, instead of calling the database
+
+
 
   describe "get_job/3" do
     test "returns error when job not found" do
@@ -82,10 +85,30 @@ defmodule Wttj.Resolvers.JobTrackingTest do
   end
 
   describe "move_candidate/3" do
+    @clientId "1234"
+
+    defmodule WTTJ.Subscription do
+      @callback publish(Plug.Conn.t() | atom(), map(), keyword()) :: :ok | {:error, term()}
+    end
+
+    # Define the mock using the behaviour we just defined
+    Mox.defmock(MockSubscription, for: WTTJ.Subscription)
+
+    setup do
+      Application.put_env(:wttj, :subscription_publisher, MockSubscription)
+
+      on_exit(fn ->
+        Application.put_env(:wttj, :subscription_publisher, MockSubscription)
+      end)
+
+      :ok
+    end
+
     test "returns error when candidate not found" do
       # Arrange
       args = %{
-        candidate_id: 100
+        candidate_id: 100,
+        client_id: @clientId
       }
 
       # Act
@@ -95,7 +118,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       assert {:error, "candidate not found"} == result
     end
 
-    test "returns ok when transaction is successful" do
+    test "returns ok and publishes event" do
       # Arrange
       job = job_fixture()
       status1 = status_fixture(%{job_id: job.id})
@@ -106,9 +129,17 @@ defmodule Wttj.Resolvers.JobTrackingTest do
         candidate_id: candidate.id,
         before_index: nil,
         after_index: nil,
-        destination_status_id: status2.id
+        destination_status_id: status2.id,
+        client_id: @clientId
       }
 
+      expect(MockSubscription, :publish, fn endpoint, payload, topic ->
+        assert endpoint == WttjWeb.Endpoint
+        assert payload.candidate.id == candidate.id
+        assert payload.client_id == @clientId
+        assert topic == [candidate_moved: "candidate_moved:#{job.id}"]
+        :ok
+      end)
       # Act
       result = JobTracking.move_candidate(nil, args, nil)
 

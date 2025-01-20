@@ -24,7 +24,8 @@ defmodule WttjWeb.Router do
     if Mix.env() == :dev do
       forward "/graphiql", Absinthe.Plug.GraphiQL,
         schema: Wttj.Schema,
-        interface: :playground
+        interface: :playground,
+        socket: WttjWeb.JobSocket
     end
   end
 

@@ -59,7 +59,10 @@ defmodule Wttj.MixProject do
       {:bandit, "~> 1.5"},
       {:absinthe, "~> 1.7"},
       {:absinthe_plug, "~> 1.5"},
-      {:cors_plug, "~> 3.0"}
+      {:phoenix_pubsub, "~> 2.0"},
+      {:absinthe_phoenix, "~> 2.0"},
+      {:cors_plug, "~> 3.0"},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 

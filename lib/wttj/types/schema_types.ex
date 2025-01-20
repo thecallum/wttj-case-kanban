@@ -41,4 +41,11 @@ defmodule Wttj.Types.SchemaTypes do
     field :job_id, :id
     field :status_id, :id
   end
+
+  @desc "Return type for candidate_moved subscription"
+  object :candidate_moved do
+    field :candidate, :candidate
+    field :client_id, :string
+  end
+
 end

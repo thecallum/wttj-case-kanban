@@ -1,7 +1,5 @@
 defmodule Wttj.Resolvers.JobTracking do
-  alias Wttj.Jobs
-  alias Wttj.Candidates
-  alias Wttj.Statuses
+  alias Wttj.{Jobs, Candidates, Statuses}
 
   def get_job(_parent, %{job_id: job_id}, _resolution) do
     case Jobs.get_job(job_id) do
@@ -29,15 +27,28 @@ defmodule Wttj.Resolvers.JobTracking do
   end
 
   def move_candidate(_parent, args, _resolution) do
+    subscription_module =
+      Application.get_env(:wttj, :subscription_publisher, Absinthe.Subscription)
 
-    case Candidates.update_candidate_display_order(
-      args[:candidate_id],
-      args[:before_index],
-      args[:after_index],
-      args[:destination_status_id]
-    ) do
-      {:ok, candidate} -> {:ok, candidate}
-      {:error, error} -> {:error, error}
+    with {:ok, candidate} <-
+           Candidates.update_candidate_display_order(
+             args[:candidate_id],
+             args[:before_index],
+             args[:after_index],
+             args[:destination_status_id]
+           ) do
+      payload = %{
+        candidate: candidate,
+        client_id: args.client_id
+      }
+
+      subscription_module.publish(
+        WttjWeb.Endpoint,
+        payload,
+        candidate_moved: "candidate_moved:#{candidate.job_id}"
+      )
+
+      {:ok, candidate}
     end
   end
 end
