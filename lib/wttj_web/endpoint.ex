@@ -20,11 +20,7 @@ defmodule WttjWeb.Endpoint do
     longpoll: [connect_info: [session: @session_options]]
 
   socket "/socket", WttjWeb.JobSocket,
-    websocket: [
-      connect_info: [:x_headers],
-      # Add your frontend origin
-      check_origin: ["http://localhost:5173"]
-    ],
+    websocket: true,
     longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
