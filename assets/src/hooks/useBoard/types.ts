@@ -1,13 +1,16 @@
-import { Candidate } from "../../types";
+import { Candidate } from '../../types'
 
 export interface SortedCandidates {
   [key: string]: Candidate[]
 }
 
-
-export interface CandidateMoved {
+export interface CandidateMovedSubscription {
   candidateMoved: {
-    clientId: string,
+    clientId: string
     candidate: Candidate
   }
+}
+
+export interface MoveCandidateMutation {
+  moveCandidate: Candidate
 }

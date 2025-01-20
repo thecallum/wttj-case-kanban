@@ -11,7 +11,7 @@ import {
 import { MOVE_CANDIDATE } from '../../graphql/mutations/moveCandidate'
 import { useSortedCandidates } from './useSortedCandidates'
 import { CANDIDATE_MOVED } from '../../graphql/subscriptions/candidateMoved'
-import { CandidateMoved } from './types'
+import { CandidateMovedSubscription, MoveCandidateMutation } from './types'
 
 export const useBoard = (jobId: string) => {
   const clientId = useRef(Math.random().toString(36).substr(2, 9))
@@ -24,7 +24,7 @@ export const useBoard = (jobId: string) => {
     variables: { jobId },
   })
 
-  const handleOnSubscriptionData = (data: OnDataOptions<CandidateMoved>) => {
+  const handleOnSubscriptionData = (data: OnDataOptions<CandidateMovedSubscription>) => {
     const candidateMoved = data.data.data!.candidateMoved
 
     // hide echos (events triggered by this client)
@@ -37,7 +37,7 @@ export const useBoard = (jobId: string) => {
     updateCandidatePosition(id, displayOrder, statusId)
   }
 
-  useSubscription<CandidateMoved>(CANDIDATE_MOVED, {
+  useSubscription<CandidateMovedSubscription>(CANDIDATE_MOVED, {
     variables: {
       jobId,
     },
@@ -57,7 +57,7 @@ export const useBoard = (jobId: string) => {
     )
   }
 
-  const handleOnUpdateSuccess = (data: { moveCandidate: Candidate }) => {
+  const handleOnUpdateSuccess = (data: MoveCandidateMutation) => {
     // reset error
     setUpdateError(null)
 
@@ -66,9 +66,7 @@ export const useBoard = (jobId: string) => {
     updateCandidatePosition(id, displayOrder, statusId)
   }
 
-  const [updateCandiate] = useMutation<{
-    moveCandidate: Candidate
-  }>(MOVE_CANDIDATE, {
+  const [updateCandiate] = useMutation<MoveCandidateMutation>(MOVE_CANDIDATE, {
     onCompleted: handleOnUpdateSuccess,
     onError: handleOnUpdateError,
   })
