@@ -9,14 +9,6 @@ defmodule Wttj.Candidates do
   alias Wttj.Candidates.Candidate
   alias Wttj.Statuses.Status
 
-  defp validate_destination_status_version(destination_status_id, destination_status_version) do
-    if !is_nil(destination_status_id) && is_nil(destination_status_version) do
-      {:error, "destination_status_version cannot be null"}
-    else
-      {:ok}
-    end
-  end
-
   def update_candidate_display_order(
         candidate_id,
         before_index,
@@ -39,52 +31,31 @@ defmodule Wttj.Candidates do
       result =
         Repo.transaction(fn ->
           # 1. Get both statuses with current versions
-          source_status =
-            from(s in Status,
-              where: s.id == ^candidate.status_id,
-              lock: "FOR UPDATE"
-            )
-            |> Repo.one!()
-
-          dest_status =
-            if !is_nil(destination_status_id) do
-              from(s in Status,
-                where: s.id == ^destination_status_id,
-                lock: "FOR UPDATE"
-              )
-              |> Repo.one!()
-            else
-              nil
-            end
+          source_status = fetch_and_lock_status(candidate.status_id)
+          dest_status = destination_status_id && fetch_and_lock_status(destination_status_id)
 
           # 2. Version check - fail fast if versions don't match
-          if source_status.lock_version != source_status_version or
-               (!is_nil(destination_status_version) &&
-                  dest_status.lock_version != destination_status_version) do
+          if !validate_status_version(source_status, source_status_version) do
+            Repo.rollback(:version_mismatch)
+          end
+
+          if destination_status_id &&
+               !validate_status_version(dest_status, destination_status_version) do
             Repo.rollback(:version_mismatch)
           end
 
           # 3. If we get here, versions match - do the update
-
-          attrs = %{
-            display_order: new_index,
-            status_id: destination_status_id || candidate.status_id
-          }
-
           {:ok, updated_candidate} =
-            Repo.update(Candidate.changeset(candidate, attrs))
+            candidate
+            |> Candidate.changeset(%{
+              display_order: new_index,
+              status_id: destination_status_id || candidate.status_id
+            })
+            |> Repo.update()
 
           # 4. Increment both version numbers
-          new_source_status_version = source_status.lock_version + 1
-          new_dest_status_version = if dest_status, do: dest_status.lock_version + 1, else: nil
-
-          Repo.update!(
-            Status.changeset(source_status, %{lock_version: new_source_status_version})
-          )
-
-          if !is_nil(destination_status_version) do
-            Repo.update!(Status.changeset(dest_status, %{lock_version: new_dest_status_version}))
-          end
+          new_source_status_version = increment_version_number(source_status)
+          new_dest_status_version = dest_status && increment_version_number(dest_status)
 
           # 5. Return the updated candidate
           %{
@@ -103,6 +74,34 @@ defmodule Wttj.Candidates do
           {:ok, candidate}
       end
     end
+  end
+
+  defp validate_destination_status_version(destination_status_id, destination_status_version) do
+    if !is_nil(destination_status_id) && is_nil(destination_status_version) do
+      {:error, "destination_status_version cannot be null"}
+    else
+      {:ok}
+    end
+  end
+
+  defp fetch_and_lock_status(status_id) do
+    from(s in Status,
+      where: s.id == ^status_id,
+      lock: "FOR UPDATE"
+    )
+    |> Repo.one!()
+  end
+
+  defp validate_status_version(status, provided_version) do
+    status.lock_version == provided_version
+  end
+
+  defp increment_version_number(status) do
+    new_version_number = status.lock_version + 1
+
+    Repo.update!(Status.changeset(status, %{lock_version: new_version_number}))
+
+    new_version_number
   end
 
   defp validate_status_owned_by_board(_candidate, nil), do: {:ok}
