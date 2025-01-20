@@ -82,10 +82,13 @@ defmodule Wttj.Resolvers.JobTrackingTest do
   end
 
   describe "move_candidate/3" do
+    @clientId "1234"
+
     test "returns error when candidate not found" do
       # Arrange
       args = %{
-        candidate_id: 100
+        candidate_id: 100,
+        client_id: @clientId
       }
 
       # Act
@@ -106,7 +109,8 @@ defmodule Wttj.Resolvers.JobTrackingTest do
         candidate_id: candidate.id,
         before_index: nil,
         after_index: nil,
-        destination_status_id: status2.id
+        destination_status_id: status2.id,
+        client_id: @clientId
       }
 
       # Act
