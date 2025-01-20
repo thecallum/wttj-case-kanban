@@ -87,7 +87,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
   describe "move_candidate/3" do
     @clientId "1234"
     @destination_status_version 1
-    @before_index_version 1
+    @source_status_version 1
 
     defmodule WTTJ.Subscription do
       @callback publish(Plug.Conn.t() | atom(), map(), keyword()) :: :ok | {:error, term()}
@@ -112,7 +112,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
         candidate_id: 100,
         client_id: @clientId,
         destination_status_version: @destination_status_version,
-        before_index_version: @before_index_version
+        source_status_version: @source_status_version
       }
 
       # Act
@@ -136,7 +136,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
         destination_status_id: status2.id,
         client_id: @clientId,
         destination_status_version: @destination_status_version,
-        before_index_version: @before_index_version
+        source_status_version: @source_status_version
       }
 
       expect(MockSubscription, :publish, fn endpoint, payload, topic ->

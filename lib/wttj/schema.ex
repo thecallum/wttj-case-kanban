@@ -34,8 +34,11 @@ defmodule Wttj.Schema do
       arg(:candidate_id, non_null(:id))
       arg(:before_index, :display_order)
       arg(:after_index, :display_order)
-      arg(:destination_status_id, :id)
       arg(:client_id, non_null(:string))
+      arg(:source_status_version, non_null(:integer))
+
+      arg(:destination_status_id, :id)
+      arg(:destination_status_version, :integer)
 
       resolve(&Resolvers.JobTracking.move_candidate/3)
     end

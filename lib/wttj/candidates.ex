@@ -21,7 +21,7 @@ defmodule Wttj.Candidates do
         candidate_id,
         before_index,
         after_index,
-        before_index_version,
+        source_status_version,
         destination_status_id \\ nil,
         destination_status_version \\ nil
       ) do
@@ -58,7 +58,7 @@ defmodule Wttj.Candidates do
             end
 
           # 2. Version check - fail fast if versions don't match
-          if source_status.lock_version != before_index_version or
+          if source_status.lock_version != source_status_version or
                (!is_nil(destination_status_version) &&
                   dest_status.lock_version != destination_status_version) do
             Repo.rollback(:version_mismatch)
@@ -72,9 +72,7 @@ defmodule Wttj.Candidates do
           }
 
           {:ok, updated_candidate} =
-            Repo.update(
-              Candidate.changeset(candidate, attrs)
-            )
+            Repo.update(Candidate.changeset(candidate, attrs))
 
           # 4. Increment both version numbers
           new_source_status_version = source_status.lock_version + 1
