@@ -9,14 +9,12 @@ defmodule Wttj.Candidates do
   alias Wttj.Candidates.Candidate
   alias Wttj.Statuses.Status
 
-
   defp validate_destination_status_version(destination_status_id, destination_status_version) do
-    if (!is_nil(destination_status_id) && is_nil(destination_status_version)) do
+    if !is_nil(destination_status_id) && is_nil(destination_status_version) do
       {:error, "destination_status_version cannot be null"}
     else
       {:ok}
     end
-
   end
 
   def update_candidate_display_order(
@@ -27,19 +25,18 @@ defmodule Wttj.Candidates do
         destination_status_id \\ nil,
         destination_status_version \\ nil
       ) do
-    with {:ok} <- validate_destination_status_version(destination_status_id, destination_status_version),
+    with {:ok} <-
+           validate_destination_status_version(destination_status_id, destination_status_version),
          {:ok, candidate} <- get_candidate_by_id(candidate_id),
          {:ok} <- validate_status_owned_by_board(candidate, destination_status_id),
          {:ok, new_index} <- Indexing.generate_index(before_index, after_index),
          {:ok} <-
            validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
+      if !is_nil(destination_status_id) && is_nil(destination_status_version) do
+        {:error, "destination_status_version cannot be null"}
+      end
 
-            if (!is_nil(destination_status_id) && is_nil(destination_status_version)) do
-              {:error, "destination_status_version cannot be null"}
-            end
-
-
-            result =
+      result =
         Repo.transaction(fn ->
           # if we've got this far, everythign is still valid
 
@@ -52,7 +49,7 @@ defmodule Wttj.Candidates do
             |> Repo.one!()
 
           dest_status =
-            if destination_status_id do
+            if !is_nil(destination_status_id) do
               from(s in Status,
                 where: s.id == ^destination_status_id,
                 lock: "FOR UPDATE"
@@ -69,13 +66,19 @@ defmodule Wttj.Candidates do
             Repo.rollback(:version_mismatch)
           end
 
+          # IO.inspect("Candidate before updated:")
+          # IO.inspect(candidate)
+
           # 3. If we get here, versions match - do the update
+
+          attrs = %{
+            display_order: new_index,
+            status_id: destination_status_id || candidate.status_id
+          }
+
           {:ok, updated_candidate} =
             Repo.update(
-              Candidate.changeset(candidate, %{
-                display_order: new_index,
-                status_id: destination_status_id
-              })
+              Candidate.changeset(candidate, attrs)
             )
 
           # 4. Increment both version numbers

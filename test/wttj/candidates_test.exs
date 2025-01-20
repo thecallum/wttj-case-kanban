@@ -7,6 +7,7 @@ defmodule Wttj.CandidatesTest do
   import Wttj.StatusesFixtures
   import Wttj.CandidatesFixtures
   alias Wttj.Candidates.Candidate
+  alias Wttj.Statuses.Status
 
   setup do
     job1 = job_fixture()
@@ -18,8 +19,8 @@ defmodule Wttj.CandidatesTest do
     {:ok, job1: job1, job2: job2, status1: status1, status2: status2, status3: status3}
   end
 
-  @before_index_version 1
-  @after_index_version 1
+  @before_status_version 1
+  @after_status_version 1
 
   describe "candidates (existing tests)" do
     alias Wttj.Candidates.Candidate
@@ -105,9 +106,9 @@ defmodule Wttj.CandidatesTest do
           candidate.id,
           nil,
           nil,
-          @before_index_version,
+          @before_status_version,
           status3.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -130,9 +131,9 @@ defmodule Wttj.CandidatesTest do
           candidate.id,
           nil,
           nil,
-          @before_index_version,
+          @before_status_version,
           100,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -151,7 +152,7 @@ defmodule Wttj.CandidatesTest do
           candidate_id,
           nil,
           nil,
-          @before_index_version
+          @before_status_version
         )
 
       # Assert
@@ -176,9 +177,9 @@ defmodule Wttj.CandidatesTest do
           candidate.id,
           nil,
           nil,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -187,7 +188,7 @@ defmodule Wttj.CandidatesTest do
   end
 
   describe "update_candidate_display_order/3 returns a version mismatch error" do
-    test "returns error when version mismatch",
+    test "when source status version number doesnt match",
          %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate =
@@ -197,7 +198,7 @@ defmodule Wttj.CandidatesTest do
           display_order: "1"
         })
 
-      before_index_version = 2
+      before_status_version = 2
 
       # Act
       result =
@@ -205,13 +206,122 @@ defmodule Wttj.CandidatesTest do
           candidate.id,
           nil,
           nil,
-          before_index_version,
+          before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
       assert result == {:error, :version_mismatch}
+    end
+
+    test "when destination status version number doesnt match",
+         %{job1: job1, status1: status1, status2: status2} do
+      # Arrange
+      candidate =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+      after_status_version = 2
+
+      # Act
+      result =
+        Candidates.update_candidate_display_order(
+          candidate.id,
+          nil,
+          nil,
+          @before_status_version,
+          status2.id,
+          after_status_version
+        )
+
+      # Assert
+      assert result == {:error, :version_mismatch}
+    end
+  end
+
+  describe "update_candidate_display_order/3 updates status version number" do
+    # when source version number doesnt match
+    # when destination version number doesnt match
+
+    test "when moving candidate within same column",
+         %{job1: job1, status1: status1, status2: status2} do
+      # Arrange
+      candidate1 =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+      candidate2 =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "2"
+        })
+
+      # before_status_version = 2
+
+      # Act
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          candidate2.display_order,
+          nil,
+          @before_status_version
+          # status2.id,
+          # @after_status_version
+        )
+
+      # Assert
+
+      assert {:ok, candidate} = result
+      assert candidate.display_order == "3"
+      assert candidate.status_id == status1.id
+
+      db_response = Repo.get(Status, status1.id)
+
+      assert db_response.lock_version == 2
+    end
+
+    test "when moving candidate to a different column",
+         %{job1: job1, status1: status1, status2: status2} do
+      # Arrange
+      candidate1 =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+      # before_status_version = 2
+
+      # Act
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          nil,
+          nil,
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
+
+      # Assert
+
+      assert {:ok, candidate} = result
+      assert candidate.display_order == "1"
+      assert candidate.status_id == status2.id
+
+      status1_db_response = Repo.get(Status, status1.id)
+      assert status1_db_response.lock_version == 2
+
+      status2_db_response = Repo.get(Status, status2.id)
+      assert status2_db_response.lock_version == 2
     end
   end
 
@@ -238,9 +348,9 @@ defmodule Wttj.CandidatesTest do
           candiate_in_status_2.id,
           nil,
           nil,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -263,9 +373,9 @@ defmodule Wttj.CandidatesTest do
           candidate.id,
           nil,
           nil,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -303,9 +413,9 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           nil,
           candidate1.display_order,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -347,9 +457,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           nil,
           candidate2.display_order,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -370,9 +480,9 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           nil,
           "1.5",
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -391,9 +501,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           nil,
           "1",
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -417,9 +527,9 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           nil,
           candidate1.display_order,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -450,9 +560,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           nil,
           candidate2.display_order,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -474,9 +584,9 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           nil,
           "1.5",
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -495,9 +605,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           nil,
           "1",
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -521,9 +631,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           candidate2.display_order,
           nil,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -553,9 +663,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           candidate2.display_order,
           nil,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -576,9 +686,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           "1.5",
           nil,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -597,9 +707,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           "1",
           nil,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -623,9 +733,9 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           candidate1.display_order,
           nil,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -655,9 +765,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           candidate2.display_order,
           nil,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -678,9 +788,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           "1.5",
           nil,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -699,9 +809,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           "1",
           nil,
-          @before_index_version,
+          @before_status_version,
           status2.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -728,9 +838,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           candidate2.display_order,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -763,9 +873,9 @@ defmodule Wttj.CandidatesTest do
           candidate4.id,
           candidate1.display_order,
           candidate3.display_order,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -789,9 +899,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           "1.9",
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -818,9 +928,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           candidate2.display_order,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -853,9 +963,9 @@ defmodule Wttj.CandidatesTest do
           candidate4.id,
           candidate1.display_order,
           candidate3.display_order,
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
@@ -891,9 +1001,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           "1.9",
-          @before_index_version,
+          @before_status_version,
           status1.id,
-          @after_index_version
+          @after_status_version
         )
 
       # Assert
