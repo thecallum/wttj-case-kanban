@@ -244,11 +244,8 @@ defmodule Wttj.CandidatesTest do
   end
 
   describe "update_candidate_display_order/3 updates status version number" do
-    # when source version number doesnt match
-    # when destination version number doesnt match
-
     test "when moving candidate within same column",
-         %{job1: job1, status1: status1, status2: status2} do
+         %{job1: job1, status1: status1} do
       # Arrange
       candidate1 =
         candidate_fixture(%{

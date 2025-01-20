@@ -1,15 +1,10 @@
 defmodule Wttj.Resolvers.JobTrackingTest do
-  alias Wttj.Candidates.Candidate
   use Wttj.DataCase
   alias Wttj.Resolvers.JobTracking
   import Wttj.JobsFixtures
   import Wttj.StatusesFixtures
   import Wttj.CandidatesFixtures
   import Mox
-
-  # These tests should probably be mocked, instead of calling the database
-
-
 
   describe "get_job/3" do
     test "returns error when job not found" do
@@ -157,7 +152,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       result = JobTracking.move_candidate(nil, args, nil)
 
       # Assert
-      assert {:ok, %{candidate: candidate}} = result
+      assert {:ok, %{candidate: _candidate}} = result
 
     end
   end
