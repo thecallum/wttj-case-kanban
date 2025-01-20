@@ -2,18 +2,24 @@ import { ApolloError, useMutation } from '@apollo/client'
 import { MoveCandidateMutation } from './types'
 import { MOVE_CANDIDATE } from '../../graphql/mutations/moveCandidate'
 import { useState } from 'react'
-import { Candidate } from '../../types'
+import { Candidate, Status } from '../../types'
 
 export const useMoveCandidate = (
   clientId: string,
-  updateCandidatePosition: (id: number, displayOrder: string, statusId: number) => void
+  updateCandidatePosition: (id: number, displayOrder: string, statusId: number) => void,
+  updateStatusVersion: (statusId: number, newVersion: number) => void
 ) => {
   const handleOnUpdateSuccess = (data: MoveCandidateMutation) => {
     // reset error
     setUpdateError(null)
 
-    const { id, displayOrder, statusId } = data.moveCandidate
+    const { id, displayOrder, statusId } = data.moveCandidate.candidate
     updateCandidatePosition(id, displayOrder, statusId)
+
+    const {sourceStatus, destinationStatus } = data.moveCandidate
+    
+    updateStatusVersion(sourceStatus.id, sourceStatus.lockVersion)
+    updateStatusVersion(destinationStatus.id, destinationStatus.lockVersion)
   }
 
   const handleOnUpdateError = (error: ApolloError) => {
@@ -35,20 +41,27 @@ export const useMoveCandidate = (
     candidate: Candidate,
     beforeIndex: string | null,
     afterIndex: string | null,
-    destinationStatusId: number
+    destinationStatusId: number,
+    sourceStatus: Status,
+    destinationStatus: Status | null
   ) => {
     // store snapshot of current state, so candidate can be reverted
     // if update fails
     setCandidateSnapshot(candidate)
 
+    const variables = {
+      candidateId: candidate.id,
+      destinationStatusId,
+      beforeIndex,
+      afterIndex,
+      clientId: clientId,
+      sourceStatusVersion: sourceStatus.lockVersion,
+      destinationStatusVersion: destinationStatus?.lockVersion ?? null,
+    }
+
+
     updateCandiate({
-      variables: {
-        candidateId: candidate.id,
-        destinationStatusId,
-        beforeIndex,
-        afterIndex,
-        clientId: clientId,
-      },
+      variables,
     })
   }
 
