@@ -18,6 +18,7 @@ export const GET_BOARD = gql`
       jobId
       position
       label
+      lockVersion
     }
   }
 `

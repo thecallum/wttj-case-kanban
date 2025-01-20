@@ -12,6 +12,14 @@ subscription TestSubscription($jobId: ID!) {
       statusId
     }
     clientId
+    sourceStatus {
+      id
+      lockVersion
+    }
+    destinationStatus {
+      id
+      lockVersion
+    }
   }
 }
 `
