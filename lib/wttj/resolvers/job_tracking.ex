@@ -35,7 +35,9 @@ defmodule Wttj.Resolvers.JobTracking do
              args[:candidate_id],
              args[:before_index],
              args[:after_index],
-             args[:destination_status_id]
+             args[:before_index_version],
+             args[:destination_status_id],
+             args[:destination_status_version]
            ) do
       payload = %{
         candidate: candidate,
