@@ -90,8 +90,6 @@ defmodule Wttj.Candidates do
     new_version_number = status.lock_version + 1
 
     Repo.update!(Status.changeset(status, %{lock_version: new_version_number}))
-
-    # new_version_number
   end
 
   defp validate_status_owned_by_board(_candidate, nil), do: {:ok}
