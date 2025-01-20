@@ -38,8 +38,6 @@ defmodule Wttj.Candidates do
 
       result =
         Repo.transaction(fn ->
-          # if we've got this far, everythign is still valid
-
           # 1. Get both statuses with current versions
           source_status =
             from(s in Status,
@@ -65,9 +63,6 @@ defmodule Wttj.Candidates do
                   dest_status.lock_version != destination_status_version) do
             Repo.rollback(:version_mismatch)
           end
-
-          # IO.inspect("Candidate before updated:")
-          # IO.inspect(candidate)
 
           # 3. If we get here, versions match - do the update
 
@@ -100,10 +95,6 @@ defmodule Wttj.Candidates do
             dest_version: new_dest_status_version
           }
         end)
-
-      # IO.inspect(result)
-
-      # IO.inspect(result)
 
       case result do
         {:error, :version_mismatch} ->
