@@ -7,6 +7,7 @@ export type Status = {
   id: number
   label: number
   position: number
+  lockVersion: number
 }
 
 export type Candidate = {

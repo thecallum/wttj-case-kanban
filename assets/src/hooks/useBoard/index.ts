@@ -7,22 +7,36 @@ import {
   verifyCandidateMoved,
 } from './helpers'
 import { useCandidateMovedSubscription } from './useCandidateMovedSubscription'
-import { useBoardLayout } from './useBoardLayout'
+import { useBoardData as useBoardData } from './useBoardData'
 import { useMoveCandidate } from './useMoveCandidate'
 
 export const useBoard = (jobId: string) => {
   const clientId = useRef(Math.random().toString(36).substr(2, 9))
 
-  const { loading, error, sortedCandidates, job, statuses, updateCandidatePosition } =
-    useBoardLayout(jobId)
+  const {
+    loading,
+    error,
+    sortedCandidates,
+    job,
+    statuses,
+    statusesById,
+    updateCandidatePosition,
+    updateStatusVersion,
+  } = useBoardData(jobId)
 
-  useCandidateMovedSubscription(jobId, clientId.current, (candidate: Candidate) => {
-    updateCandidatePosition(candidate.id, candidate.displayOrder, candidate.statusId)
-  })
+  useCandidateMovedSubscription(
+    jobId,
+    clientId.current,
+    (candidate: Candidate) => {
+      updateCandidatePosition(candidate.id, candidate.displayOrder, candidate.statusId)
+    },
+    updateStatusVersion
+  )
 
   const { handleUpdateCandidate, updateError } = useMoveCandidate(
     clientId.current,
-    updateCandidatePosition // callback when update is successful, or reverted back to snapshot
+    updateCandidatePosition, // callback when update is successful, or reverted back to snapshot
+    updateStatusVersion
   )
 
   const handleOnDragEnd = (dropResult: DropResult) => {
@@ -36,7 +50,17 @@ export const useBoard = (jobId: string) => {
 
     updateCandidatePosition(candidate.id, tempNewDisplayPosition, destinationStatusId)
 
-    handleUpdateCandidate(candidate, beforeIndex, afterIndex, destinationStatusId)
+    const sourceStatus = statusesById[parseInt(source.droppableId)]
+    const destinationStatus = destination ? statusesById[parseInt(destination!.droppableId)] : null
+
+    handleUpdateCandidate(
+      candidate,
+      beforeIndex,
+      afterIndex,
+      destinationStatusId,
+      sourceStatus,
+      destinationStatus
+    )
   }
 
   const calculateNewDisplayPosition = (dropResult: DropResult, statusId: string) => {

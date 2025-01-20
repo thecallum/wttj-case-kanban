@@ -1,15 +1,10 @@
 defmodule Wttj.Resolvers.JobTrackingTest do
-  alias Wttj.Candidates.Candidate
   use Wttj.DataCase
   alias Wttj.Resolvers.JobTracking
   import Wttj.JobsFixtures
   import Wttj.StatusesFixtures
   import Wttj.CandidatesFixtures
   import Mox
-
-  # These tests should probably be mocked, instead of calling the database
-
-
 
   describe "get_job/3" do
     test "returns error when job not found" do
@@ -86,6 +81,8 @@ defmodule Wttj.Resolvers.JobTrackingTest do
 
   describe "move_candidate/3" do
     @clientId "1234"
+    @destination_status_version 1
+    @source_status_version 1
 
     defmodule WTTJ.Subscription do
       @callback publish(Plug.Conn.t() | atom(), map(), keyword()) :: :ok | {:error, term()}
@@ -108,7 +105,9 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       # Arrange
       args = %{
         candidate_id: 100,
-        client_id: @clientId
+        client_id: @clientId,
+        destination_status_version: @destination_status_version,
+        source_status_version: @source_status_version
       }
 
       # Act
@@ -130,13 +129,22 @@ defmodule Wttj.Resolvers.JobTrackingTest do
         before_index: nil,
         after_index: nil,
         destination_status_id: status2.id,
-        client_id: @clientId
+        client_id: @clientId,
+        destination_status_version: @destination_status_version,
+        source_status_version: @source_status_version
       }
 
       expect(MockSubscription, :publish, fn endpoint, payload, topic ->
         assert endpoint == WttjWeb.Endpoint
         assert payload.candidate.id == candidate.id
         assert payload.client_id == @clientId
+
+        assert payload.source_status.id == status1.id
+        assert payload.source_status.lock_version == 2
+
+        assert payload.destination_status.id == status2.id
+        assert payload.destination_status.lock_version == 2
+
         assert topic == [candidate_moved: "candidate_moved:#{job.id}"]
         :ok
       end)
@@ -144,7 +152,8 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       result = JobTracking.move_candidate(nil, args, nil)
 
       # Assert
-      assert {:ok, %Candidate{}} = result
+      assert {:ok, %{candidate: _candidate}} = result
+
     end
   end
 end

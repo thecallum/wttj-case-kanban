@@ -7,6 +7,7 @@ defmodule Wttj.CandidatesTest do
   import Wttj.StatusesFixtures
   import Wttj.CandidatesFixtures
   alias Wttj.Candidates.Candidate
+  alias Wttj.Statuses.Status
 
   setup do
     job1 = job_fixture()
@@ -17,6 +18,9 @@ defmodule Wttj.CandidatesTest do
 
     {:ok, job1: job1, job2: job2, status1: status1, status2: status2, status3: status3}
   end
+
+  @before_status_version 1
+  @after_status_version 1
 
   describe "candidates (existing tests)" do
     alias Wttj.Candidates.Candidate
@@ -97,7 +101,15 @@ defmodule Wttj.CandidatesTest do
         })
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate.id, nil, nil, status3.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate.id,
+          nil,
+          nil,
+          @before_status_version,
+          status3.id,
+          @after_status_version
+        )
 
       # Assert
       assert result == {:error, "status does not belong to job"}
@@ -110,11 +122,19 @@ defmodule Wttj.CandidatesTest do
         candidate_fixture(%{
           job_id: job1.id,
           status_id: status1.id,
-          display_order: "1",
+          display_order: "1"
         })
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate.id, nil, nil, 100)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate.id,
+          nil,
+          nil,
+          @before_status_version,
+          100,
+          @after_status_version
+        )
 
       # Assert
       assert result == {:error, "status not found"}
@@ -127,7 +147,13 @@ defmodule Wttj.CandidatesTest do
       candidate_id = 100
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate_id, nil, nil)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate_id,
+          nil,
+          nil,
+          @before_status_version
+        )
 
       # Assert
       assert result == {:error, "candidate not found"}
@@ -146,10 +172,146 @@ defmodule Wttj.CandidatesTest do
         })
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate.id, nil, nil, status1.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate.id,
+          nil,
+          nil,
+          @before_status_version,
+          status1.id,
+          @after_status_version
+        )
 
       # Assert
       assert result == {:error, "candidate already exists in the list youre trying to move it to"}
+    end
+  end
+
+  describe "update_candidate_display_order/3 returns a version mismatch error" do
+    test "when source status version number doesnt match",
+         %{job1: job1, status1: status1, status2: status2} do
+      # Arrange
+      candidate =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+      before_status_version = 2
+
+      # Act
+      result =
+        Candidates.update_candidate_display_order(
+          candidate.id,
+          nil,
+          nil,
+          before_status_version,
+          status2.id,
+          @after_status_version
+        )
+
+      # Assert
+      assert result == {:error, :version_mismatch}
+    end
+
+    test "when destination status version number doesnt match",
+         %{job1: job1, status1: status1, status2: status2} do
+      # Arrange
+      candidate =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+      after_status_version = 2
+
+      # Act
+      result =
+        Candidates.update_candidate_display_order(
+          candidate.id,
+          nil,
+          nil,
+          @before_status_version,
+          status2.id,
+          after_status_version
+        )
+
+      # Assert
+      assert result == {:error, :version_mismatch}
+    end
+  end
+
+  describe "update_candidate_display_order/3 updates status version number" do
+    test "when moving candidate within same column",
+         %{job1: job1, status1: status1} do
+      # Arrange
+      candidate1 =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+      candidate2 =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "2"
+        })
+
+      # Act
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          candidate2.display_order,
+          nil,
+          @before_status_version
+        )
+
+      # Assert
+      assert {:ok, %{candidate: candidate}} = result
+      assert candidate.display_order == "3"
+      assert candidate.status_id == status1.id
+
+      db_response = Repo.get(Status, status1.id)
+
+      assert db_response.lock_version == 2
+    end
+
+    test "when moving candidate to a different column",
+         %{job1: job1, status1: status1, status2: status2} do
+      # Arrange
+      candidate1 =
+        candidate_fixture(%{
+          job_id: job1.id,
+          status_id: status1.id,
+          display_order: "1"
+        })
+
+
+      # Act
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          nil,
+          nil,
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
+
+      # Assert
+      assert {:ok, %{candidate: candidate}} = result
+      assert candidate.display_order == "1"
+      assert candidate.status_id == status2.id
+
+      status1_db_response = Repo.get(Status, status1.id)
+      assert status1_db_response.lock_version == 2
+
+      status2_db_response = Repo.get(Status, status2.id)
+      assert status2_db_response.lock_version == 2
     end
   end
 
@@ -158,10 +320,10 @@ defmodule Wttj.CandidatesTest do
          %{job1: job1, status1: status1, status2: status2} do
       # Arrange
       candidate_fixture(%{
-          job_id: job1.id,
-          status_id: status1.id,
-          display_order: "1"
-        })
+        job_id: job1.id,
+        status_id: status1.id,
+        display_order: "1"
+      })
 
       candiate_in_status_2 =
         candidate_fixture(%{
@@ -172,7 +334,14 @@ defmodule Wttj.CandidatesTest do
 
       # Act
       result =
-        Candidates.update_candidate_display_order(candiate_in_status_2.id, nil, nil, status1.id)
+        Candidates.update_candidate_display_order(
+          candiate_in_status_2.id,
+          nil,
+          nil,
+          @before_status_version,
+          status1.id,
+          @after_status_version
+        )
 
       # Assert
       assert result == {:error, "cannot insert first candidate in list. others already present"}
@@ -189,10 +358,18 @@ defmodule Wttj.CandidatesTest do
         })
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate.id, nil, nil, status2.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate.id,
+          nil,
+          nil,
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "1"
       assert candidate.status_id == status2.id
 
@@ -226,11 +403,13 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           nil,
           candidate1.display_order,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "0.5"
       assert candidate.status_id == status1.id
 
@@ -268,7 +447,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           nil,
           candidate2.display_order,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
@@ -284,7 +465,15 @@ defmodule Wttj.CandidatesTest do
         candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate2.id, nil, "1.5", status2.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate2.id,
+          nil,
+          "1.5",
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
 
       # Assert
       assert {:error, "candidate not found with matching display order"} = result
@@ -297,7 +486,15 @@ defmodule Wttj.CandidatesTest do
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate1.id, nil, "1", status1.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          nil,
+          "1",
+          @before_status_version,
+          status1.id,
+          @after_status_version
+        )
 
       # Assert
       assert {:error, "no candidates found within range"} = result
@@ -320,11 +517,13 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           nil,
           candidate1.display_order,
-          status2.id
+          @before_status_version,
+          status2.id,
+          @after_status_version
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "0.5"
       assert candidate.status_id == status2.id
 
@@ -351,7 +550,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           nil,
           candidate2.display_order,
-          status2.id
+          @before_status_version,
+          status2.id,
+          @after_status_version
         )
 
       # Assert
@@ -368,7 +569,15 @@ defmodule Wttj.CandidatesTest do
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "8"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate2.id, nil, "1.5", status2.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate2.id,
+          nil,
+          "1.5",
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
 
       # Assert
       assert {:error, "candidate not found with matching display order"} = result
@@ -381,10 +590,18 @@ defmodule Wttj.CandidatesTest do
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate1.id, nil, "1", status2.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          nil,
+          "1",
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
 
       # Assert
-      assert {:error, "no candidates found within range"} = result
+      assert {:error, "no candidates found within range"} == result
     end
   end
 
@@ -404,11 +621,13 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           candidate2.display_order,
           nil,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "3"
       assert candidate.status_id == status1.id
 
@@ -434,7 +653,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           candidate2.display_order,
           nil,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
@@ -450,7 +671,15 @@ defmodule Wttj.CandidatesTest do
       candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate1.id, "1.5", nil, status2.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          "1.5",
+          nil,
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
 
       # Assert
       assert {:error, "candidate not found with matching display order"} = result
@@ -463,7 +692,15 @@ defmodule Wttj.CandidatesTest do
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate1.id, "1", nil, status1.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          "1",
+          nil,
+          @before_status_version,
+          status1.id,
+          @after_status_version
+        )
 
       # Assert
       assert {:error, "no candidates found within range"} = result
@@ -486,11 +723,13 @@ defmodule Wttj.CandidatesTest do
           candidate2.id,
           candidate1.display_order,
           nil,
-          status2.id
+          @before_status_version,
+          status2.id,
+          @after_status_version
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "3"
       assert candidate.status_id == status2.id
 
@@ -516,7 +755,9 @@ defmodule Wttj.CandidatesTest do
           candidate1.id,
           candidate2.display_order,
           nil,
-          status2.id
+          @before_status_version,
+          status2.id,
+          @after_status_version
         )
 
       # Assert
@@ -532,7 +773,15 @@ defmodule Wttj.CandidatesTest do
       candidate_fixture(%{job_id: job1.id, status_id: status2.id, display_order: "2"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate1.id, "1.5", nil, status2.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          "1.5",
+          nil,
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
 
       # Assert
       assert {:error, "candidate not found with matching display order"} = result
@@ -545,7 +794,15 @@ defmodule Wttj.CandidatesTest do
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
 
       # Act
-      result = Candidates.update_candidate_display_order(candidate1.id, "1", nil, status2.id)
+      result =
+        Candidates.update_candidate_display_order(
+          candidate1.id,
+          "1",
+          nil,
+          @before_status_version,
+          status2.id,
+          @after_status_version
+        )
 
       # Assert
       assert {:error, "no candidates found within range"} = result
@@ -571,11 +828,13 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           candidate2.display_order,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "1.5"
       assert candidate.status_id == status1.id
 
@@ -604,7 +863,9 @@ defmodule Wttj.CandidatesTest do
           candidate4.id,
           candidate1.display_order,
           candidate3.display_order,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
@@ -628,7 +889,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           "1.9",
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
@@ -655,11 +918,13 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           candidate2.display_order,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "1.5"
       assert candidate.status_id == status1.id
 
@@ -688,7 +953,9 @@ defmodule Wttj.CandidatesTest do
           candidate4.id,
           candidate1.display_order,
           candidate3.display_order,
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert
@@ -724,7 +991,9 @@ defmodule Wttj.CandidatesTest do
           candidate3.id,
           candidate1.display_order,
           "1.9",
-          status1.id
+          @before_status_version,
+          status1.id,
+          @after_status_version
         )
 
       # Assert

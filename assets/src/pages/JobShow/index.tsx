@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom'
 import { Text } from '@welcome-ui/text'
 import { Flex } from '@welcome-ui/flex'
 import { Box } from '@welcome-ui/box'
-import { Candidate } from '../../types'
+import { Candidate, Status } from '../../types'
 import CandidateCard from '../../components/Candidate'
 import { Badge } from '@welcome-ui/badge'
 import { useBoard } from '../../hooks/useBoard'
@@ -30,58 +30,62 @@ function JobShow() {
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <Box p={20}>
           <Flex gap={10}>
-            {statuses?.map(status => (
-              <Box
-                w={300}
-                border={1}
-                backgroundColor="white"
-                borderColor="neutral-30"
-                borderRadius="md"
-                overflow="hidden"
-                key={status.id}
-              >
-                <Flex
-                  p={10}
-                  borderBottom={1}
+            {Array.from(statuses)
+              .sort((a, b) => a.position - b.position)
+              .map((status: Status) => (
+                <Box
+                  w={300}
+                  border={1}
+                  backgroundColor="white"
                   borderColor="neutral-30"
-                  alignItems="center"
-                  justify="space-between"
+                  borderRadius="md"
+                  overflow="hidden"
+                  key={status.id}
                 >
-                  <Text color="black" m={0} textTransform="capitalize">
-                    {status.label}
-                  </Text>
-                  <Badge>{(sortedCandidates[status.id] || []).length}</Badge>
-                </Flex>
+                  <Flex
+                    p={10}
+                    borderBottom={1}
+                    borderColor="neutral-30"
+                    alignItems="center"
+                    justify="space-between"
+                  >
+                    <Text color="black" m={0} textTransform="capitalize">
+                      {status.label} - Version {status.lockVersion}
+                    </Text>
+                    <Badge>{(sortedCandidates[status.id] || []).length}</Badge>
+                  </Flex>
 
-                <Droppable droppableId={`${status.id}`}>
-                  {provided => (
-                    <div {...provided.droppableProps} ref={provided.innerRef}>
-                      <Flex direction="column" p={10} pb={0}>
-                        {sortedCandidates[status.id]?.map((candidate: Candidate, index: number) => (
-                          <Draggable
-                            key={candidate.id}
-                            draggableId={`${candidate.id}`}
-                            index={index}
-                          >
-                            {provided => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                style={provided.draggableProps.style}
+                  <Droppable droppableId={`${status.id}`}>
+                    {provided => (
+                      <div {...provided.droppableProps} ref={provided.innerRef}>
+                        <Flex direction="column" p={10} pb={0}>
+                          {sortedCandidates[status.id]?.map(
+                            (candidate: Candidate, index: number) => (
+                              <Draggable
+                                key={candidate.id}
+                                draggableId={`${candidate.id}`}
+                                index={index}
                               >
-                                <CandidateCard candidate={candidate} />
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                      </Flex>
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </Box>
-            ))}
+                                {provided => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    style={provided.draggableProps.style}
+                                  >
+                                    <CandidateCard candidate={candidate} />
+                                  </div>
+                                )}
+                              </Draggable>
+                            )
+                          )}
+                        </Flex>
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </Box>
+              ))}
           </Flex>
         </Box>
       </DragDropContext>
