@@ -1,18 +1,21 @@
-import { ApolloError, useMutation, useQuery, useSubscription } from '@apollo/client'
+import { ApolloError, OnDataOptions, useMutation, useQuery, useSubscription } from '@apollo/client'
 import { GET_BOARD } from '../../graphql/queries/getBoard'
 import { Candidate, Job, Status } from '../../types'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DropResult } from '@hello-pangea/dnd'
 import {
   calculateTempNewDisplayPosition,
   getSibblingCandidates,
   verifyCandidateMoved,
 } from './helpers'
-import { UPDATE_CANDIDATE } from '../../graphql/mutations/updateCandiate'
+import { MOVE_CANDIDATE } from '../../graphql/mutations/moveCandidate'
 import { useSortedCandidates } from './useSortedCandidates'
 import { CANDIDATE_MOVED } from '../../graphql/subscriptions/candidateMoved'
+import { CandidateMoved } from './types'
 
 export const useBoard = (jobId: string) => {
+  const clientId = useRef(Math.random().toString(36).substr(2, 9))
+
   const { loading, error, data } = useQuery<{
     job: Job
     candidates: Candidate[]
@@ -21,24 +24,24 @@ export const useBoard = (jobId: string) => {
     variables: { jobId },
   })
 
-  useSubscription<{ candidateMoved: Candidate }>(CANDIDATE_MOVED, {
+  const handleOnSubscriptionData = (data: OnDataOptions<CandidateMoved>) => {
+    const candidateMoved = data.data.data!.candidateMoved
+
+    // hide echos (events triggered by this client)
+    if (clientId.current === candidateMoved.clientId) {
+      return
+    }
+
+    const { id, displayOrder, statusId } = candidateMoved.candidate
+
+    updateCandidatePosition(id, displayOrder, statusId)
+  }
+
+  useSubscription<CandidateMoved>(CANDIDATE_MOVED, {
     variables: {
       jobId,
     },
-    onComplete: () => {
-      console.log('complete', { data })
-    },
-    onData: data => {
-      // console.log('ondata', { data })
-
-      const updatedCandidate = data.data.data?.candidateMoved
-
-      const { id, displayOrder, statusId } = updatedCandidate!
-
-      // console.log(id, email, displayOrder, statusId)
-
-      updateCandidatePosition(id, displayOrder, statusId)
-    },
+    onData: handleOnSubscriptionData,
   })
 
   const handleOnUpdateError = (error: ApolloError) => {
@@ -65,7 +68,7 @@ export const useBoard = (jobId: string) => {
 
   const [updateCandiate] = useMutation<{
     moveCandidate: Candidate
-  }>(UPDATE_CANDIDATE, {
+  }>(MOVE_CANDIDATE, {
     onCompleted: handleOnUpdateSuccess,
     onError: handleOnUpdateError,
   })
@@ -125,17 +128,13 @@ export const useBoard = (jobId: string) => {
 
     updateCandidatePosition(candidateId, tempNewDisplayPosition, destinationStatusId)
 
-    // ToDo - remove me
-    // Added to simulate occasional errors
-    // const randomCauseError = Math.random() < 0.25
-
     updateCandiate({
       variables: {
-        // candidateId: randomCauseError ? 123123 : candidateId,
         candidateId,
         destinationStatusId,
         beforeIndex,
         afterIndex,
+        clientId: clientId.current,
       },
     })
   }
