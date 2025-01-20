@@ -36,9 +36,14 @@ defmodule Wttj.Resolvers.JobTracking do
              args[:after_index],
              args[:destination_status_id]
            ) do
+      payload = %{
+        candidate: candidate,
+        client_id: args.client_id
+      }
+
       Absinthe.Subscription.publish(
         WttjWeb.Endpoint,
-        candidate,
+        payload,
         candidate_moved: "candidate_moved:#{candidate.job_id}"
       )
 
