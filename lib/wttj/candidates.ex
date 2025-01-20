@@ -9,35 +9,121 @@ defmodule Wttj.Candidates do
   alias Wttj.Candidates.Candidate
   alias Wttj.Statuses.Status
 
+
+  defp validate_destination_status_version(destination_status_id, destination_status_version) do
+    if (!is_nil(destination_status_id) && is_nil(destination_status_version)) do
+      {:error, "destination_status_version cannot be null"}
+    else
+      {:ok}
+    end
+
+  end
+
   def update_candidate_display_order(
         candidate_id,
         before_index,
         after_index,
-        destination_status_id \\ nil
+        before_index_version,
+        destination_status_id \\ nil,
+        destination_status_version \\ nil
       ) do
-    with {:ok, candidate} <- get_candidate_by_id(candidate_id),
+    with {:ok} <- validate_destination_status_version(destination_status_id, destination_status_version),
+         {:ok, candidate} <- get_candidate_by_id(candidate_id),
          {:ok} <- validate_status_owned_by_board(candidate, destination_status_id),
          {:ok, new_index} <- Indexing.generate_index(before_index, after_index),
          {:ok} <-
            validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
-      Repo.update(
-        Candidate.changeset(candidate, %{
-          display_order: new_index,
-          status_id: destination_status_id || candidate.status_id
-        })
-      )
+
+            if (!is_nil(destination_status_id) && is_nil(destination_status_version)) do
+              {:error, "destination_status_version cannot be null"}
+            end
+
+
+            result =
+        Repo.transaction(fn ->
+          # if we've got this far, everythign is still valid
+
+          # 1. Get both statuses with current versions
+          source_status =
+            from(s in Status,
+              where: s.id == ^candidate.status_id,
+              lock: "FOR UPDATE"
+            )
+            |> Repo.one!()
+
+          dest_status =
+            if destination_status_id do
+              from(s in Status,
+                where: s.id == ^destination_status_id,
+                lock: "FOR UPDATE"
+              )
+              |> Repo.one!()
+            else
+              nil
+            end
+
+          # 2. Version check - fail fast if versions don't match
+          if source_status.lock_version != before_index_version or
+               (!is_nil(destination_status_version) &&
+                  dest_status.lock_version != destination_status_version) do
+            Repo.rollback(:version_mismatch)
+          end
+
+          # 3. If we get here, versions match - do the update
+          {:ok, updated_candidate} =
+            Repo.update(
+              Candidate.changeset(candidate, %{
+                display_order: new_index,
+                status_id: destination_status_id
+              })
+            )
+
+          # 4. Increment both version numbers
+          new_source_status_version = source_status.lock_version + 1
+          new_dest_status_version = if dest_status, do: dest_status.lock_version + 1, else: nil
+
+          Repo.update!(
+            Status.changeset(source_status, %{lock_version: new_source_status_version})
+          )
+
+          if !is_nil(destination_status_version) do
+            Repo.update!(Status.changeset(dest_status, %{lock_version: new_dest_status_version}))
+          end
+
+          # 5. Return the updated candidate
+          %{
+            candidate: updated_candidate,
+            source_version: new_source_status_version,
+            dest_version: new_dest_status_version
+          }
+        end)
+
+      # IO.inspect(result)
+
+      # IO.inspect(result)
+
+      case result do
+        {:error, :version_mismatch} ->
+          {:error, :version_mismatch}
+
+        {:ok, _} ->
+          {:ok, %{candidate: candidate}} = result
+          {:ok, candidate}
+      end
     end
   end
 
   defp validate_status_owned_by_board(_candidate, nil), do: {:ok}
 
   defp validate_status_owned_by_board(candidate, destination_status_id) do
-    query = from s in Status,
-      where: s.id == ^destination_status_id
+    query =
+      from s in Status,
+        where: s.id == ^destination_status_id
 
     case Repo.one(query) do
       nil ->
         {:error, "status not found"}
+
       status ->
         if status.job_id == candidate.job_id do
           {:ok}
