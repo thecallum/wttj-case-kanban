@@ -264,8 +264,6 @@ defmodule Wttj.CandidatesTest do
           display_order: "2"
         })
 
-      # before_status_version = 2
-
       # Act
       result =
         Candidates.update_candidate_display_order(
@@ -273,13 +271,10 @@ defmodule Wttj.CandidatesTest do
           candidate2.display_order,
           nil,
           @before_status_version
-          # status2.id,
-          # @after_status_version
         )
 
       # Assert
-
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "3"
       assert candidate.status_id == status1.id
 
@@ -298,7 +293,6 @@ defmodule Wttj.CandidatesTest do
           display_order: "1"
         })
 
-      # before_status_version = 2
 
       # Act
       result =
@@ -312,8 +306,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "1"
       assert candidate.status_id == status2.id
 
@@ -379,7 +372,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "1"
       assert candidate.status_id == status2.id
 
@@ -419,7 +412,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "0.5"
       assert candidate.status_id == status1.id
 
@@ -533,7 +526,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "0.5"
       assert candidate.status_id == status2.id
 
@@ -637,7 +630,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "3"
       assert candidate.status_id == status1.id
 
@@ -739,7 +732,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "3"
       assert candidate.status_id == status2.id
 
@@ -844,7 +837,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "1.5"
       assert candidate.status_id == status1.id
 
@@ -934,7 +927,7 @@ defmodule Wttj.CandidatesTest do
         )
 
       # Assert
-      assert {:ok, candidate} = result
+      assert {:ok, %{candidate: candidate}} = result
       assert candidate.display_order == "1.5"
       assert candidate.status_id == status1.id
 

@@ -29,41 +29,40 @@ defmodule Wttj.Candidates do
       end
 
       Repo.transaction(fn ->
-          # 1. Get both statuses with current versions
-          source_status = fetch_and_lock_status(candidate.status_id)
-          dest_status = destination_status_id && fetch_and_lock_status(destination_status_id)
+        # 1. Get both statuses with current versions
+        source_status = fetch_and_lock_status(candidate.status_id)
+        dest_status = destination_status_id && fetch_and_lock_status(destination_status_id)
 
-          # 2. Version check - fail fast if versions don't match
-          if !validate_status_version(source_status, source_status_version) do
-            Repo.rollback(:version_mismatch)
-          end
+        # 2. Version check - fail fast if versions don't match
+        if !validate_status_version(source_status, source_status_version) do
+          Repo.rollback(:version_mismatch)
+        end
 
-          if destination_status_id &&
-               !validate_status_version(dest_status, destination_status_version) do
-            Repo.rollback(:version_mismatch)
-          end
+        if destination_status_id &&
+             !validate_status_version(dest_status, destination_status_version) do
+          Repo.rollback(:version_mismatch)
+        end
 
-          # 3. If we get here, versions match - do the update
-          {:ok, updated_candidate} =
-            candidate
-            |> Candidate.changeset(%{
-              display_order: new_index,
-              status_id: destination_status_id || candidate.status_id
-            })
-            |> Repo.update()
+        # 3. If we get here, versions match - do the update
+        {:ok, updated_candidate} =
+          candidate
+          |> Candidate.changeset(%{
+            display_order: new_index,
+            status_id: destination_status_id || candidate.status_id
+          })
+          |> Repo.update()
 
-          # 4. Increment both version numbers
-          source_status = increment_status_version(source_status)
-          dest_status = dest_status && increment_status_version(dest_status)
+        # 4. Increment both version numbers
+        source_status = increment_status_version(source_status)
+        dest_status = dest_status && increment_status_version(dest_status)
 
-          # 5. Return the updated candidate
-          %{
-            candidate: updated_candidate,
-            source_status: source_status,
-            destination_status: dest_status,
-          }
-        end)
-      end
+        # 5. Return the updated candidate
+        %{
+          candidate: updated_candidate,
+          source_status: source_status,
+          destination_status: dest_status
+        }
+      end)
     end
   end
 

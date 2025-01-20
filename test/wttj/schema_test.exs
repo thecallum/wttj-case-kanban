@@ -248,12 +248,22 @@ defmodule Wttj.SchemaTest do
           clientId: $clientId,
           sourceStatusVersion: $sourceStatusVersion,
           destinationStatusVersion: $destinationStatusVersion) {
-          email
-          id
-          jobId
-          position
-          statusId
-          displayOrder
+          candidate {
+            id
+            email
+            jobId
+            position
+            displayOrder
+            statusId
+          }
+          sourceStatus {
+            id
+            lockVersion
+          }
+          destinationStatus {
+            id
+            lockVersion
+          }
         }
       }
     """
@@ -287,12 +297,22 @@ defmodule Wttj.SchemaTest do
       # Assert
       assert result.data == %{
                "moveCandidate" => %{
-                 "email" => candidate1.email,
-                 "id" => to_string(candidate1.id),
-                 "jobId" => to_string(candidate1.job_id),
-                 "position" => candidate1.position,
-                 "statusId" => to_string(status2.id),
-                 "displayOrder" => "1"
+                 "candidate" => %{
+                   "email" => candidate1.email,
+                   "id" => to_string(candidate1.id),
+                   "jobId" => to_string(candidate1.job_id),
+                   "position" => candidate1.position,
+                   "statusId" => to_string(status2.id),
+                   "displayOrder" => "1"
+                 },
+                 "destinationStatus" => %{
+                   "id" => to_string(status2.id),
+                   "lockVersion" => 2
+                 },
+                 "sourceStatus" => %{
+                   "id" => to_string(status1.id),
+                   "lockVersion" => 2
+                 }
                }
              }
     end
@@ -304,7 +324,9 @@ defmodule Wttj.SchemaTest do
 
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+
       candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
 
@@ -317,19 +339,26 @@ defmodule Wttj.SchemaTest do
             "candidateId" => candidate3.id,
             "afterIndex" => candidate1.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
+            "sourceStatusVersion" => @source_status_version
           }
         )
 
       # Assert
       assert result.data == %{
                "moveCandidate" => %{
-                 "email" => candidate3.email,
-                 "id" => to_string(candidate3.id),
-                 "jobId" => to_string(candidate3.job_id),
-                 "position" => candidate3.position,
-                 "statusId" => to_string(status1.id),
-                 "displayOrder" => "0.5"
+                 "candidate" => %{
+                   "email" => candidate3.email,
+                   "id" => to_string(candidate3.id),
+                   "jobId" => to_string(candidate3.job_id),
+                   "position" => candidate3.position,
+                   "statusId" => to_string(status1.id),
+                   "displayOrder" => "0.5"
+                 },
+                 "destinationStatus" => nil,
+                 "sourceStatus" => %{
+                   "id" => to_string(status1.id),
+                   "lockVersion" => 2
+                 }
                }
              }
     end
@@ -341,7 +370,9 @@ defmodule Wttj.SchemaTest do
 
       candidate1 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+
       candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+
       candidate3 =
         candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
 
@@ -354,19 +385,26 @@ defmodule Wttj.SchemaTest do
             "candidateId" => candidate1.id,
             "beforeIndex" => candidate3.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
+            "sourceStatusVersion" => @source_status_version
           }
         )
 
       # Assert
       assert result.data == %{
                "moveCandidate" => %{
-                 "email" => candidate1.email,
-                 "id" => to_string(candidate1.id),
-                 "jobId" => to_string(candidate1.job_id),
-                 "position" => candidate1.position,
-                 "statusId" => to_string(status1.id),
-                 "displayOrder" => "4"
+                 "candidate" => %{
+                   "email" => candidate1.email,
+                   "id" => to_string(candidate1.id),
+                   "jobId" => to_string(candidate1.job_id),
+                   "position" => candidate1.position,
+                   "statusId" => to_string(status1.id),
+                   "displayOrder" => "4"
+                 },
+                 "destinationStatus" => nil,
+                 "sourceStatus" => %{
+                   "id" => to_string(status1.id),
+                   "lockVersion" => 2
+                 }
                }
              }
     end
@@ -395,19 +433,26 @@ defmodule Wttj.SchemaTest do
             "beforeIndex" => candidate2.display_order,
             "afterIndex" => candidate3.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
+            "sourceStatusVersion" => @source_status_version
           }
         )
 
       # Assert
       assert result.data == %{
                "moveCandidate" => %{
-                 "email" => candidate1.email,
-                 "id" => to_string(candidate1.id),
-                 "jobId" => to_string(candidate1.job_id),
-                 "position" => candidate1.position,
-                 "statusId" => to_string(status1.id),
-                 "displayOrder" => "2.5"
+                 "candidate" => %{
+                   "email" => candidate1.email,
+                   "id" => to_string(candidate1.id),
+                   "jobId" => to_string(candidate1.job_id),
+                   "position" => candidate1.position,
+                   "statusId" => to_string(status1.id),
+                   "displayOrder" => "2.5"
+                 },
+                 "destinationStatus" => nil,
+                 "sourceStatus" => %{
+                   "id" => to_string(status1.id),
+                   "lockVersion" => 2
+                 }
                }
              }
     end
@@ -425,7 +470,7 @@ defmodule Wttj.SchemaTest do
             "beforeIndex" => "1.2s",
             "afterIndex" => "abcd",
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
+            "sourceStatusVersion" => @source_status_version
           }
         )
 
@@ -450,7 +495,7 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
+            "sourceStatusVersion" => @source_status_version
           }
         )
 
@@ -504,7 +549,7 @@ defmodule Wttj.SchemaTest do
           variables: %{
             "candidateId" => 100,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
+            "sourceStatusVersion" => @source_status_version
           }
         )
 
@@ -540,7 +585,7 @@ defmodule Wttj.SchemaTest do
             "beforeIndex" => candidate1.display_order,
             "afterIndex" => candidate3.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
+            "sourceStatusVersion" => @source_status_version
           }
         )
 

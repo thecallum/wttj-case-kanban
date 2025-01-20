@@ -143,6 +143,13 @@ defmodule Wttj.Resolvers.JobTrackingTest do
         assert endpoint == WttjWeb.Endpoint
         assert payload.candidate.id == candidate.id
         assert payload.client_id == @clientId
+
+        assert payload.source_status.id == status1.id
+        assert payload.source_status.lock_version == 2
+
+        assert payload.destination_status.id == status2.id
+        assert payload.destination_status.lock_version == 2
+
         assert topic == [candidate_moved: "candidate_moved:#{job.id}"]
         :ok
       end)
@@ -150,7 +157,8 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       result = JobTracking.move_candidate(nil, args, nil)
 
       # Assert
-      assert {:ok, %Candidate{}} = result
+      assert {:ok, %{candidate: candidate}} = result
+
     end
   end
 end
