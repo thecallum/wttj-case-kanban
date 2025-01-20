@@ -31,7 +31,7 @@ defmodule Wttj.Resolvers.JobTracking do
       Application.get_env(:wttj, :subscription_publisher, Absinthe.Subscription)
 
     with :ok <- validate_status_version(args),
-        {:ok, candidate} <-
+         {:ok, update} <-
            Candidates.update_candidate_display_order(
              args[:candidate_id],
              args[:before_index],
@@ -40,25 +40,33 @@ defmodule Wttj.Resolvers.JobTracking do
              args[:destination_status_id],
              args[:destination_status_version]
            ) do
-      payload = %{
-        candidate: candidate,
-        client_id: args.client_id
-      }
-
       subscription_module.publish(
         WttjWeb.Endpoint,
-        payload,
-        candidate_moved: "candidate_moved:#{candidate.job_id}"
+        %{
+          candidate: update.candidate,
+          client_id: args.client_id,
+          destination_status: update.destination_status,
+          source_status: update.source_status,
+
+        },
+        candidate_moved: "candidate_moved:#{update.candidate.job_id}"
       )
 
-      {:ok, candidate}
+      {:ok,
+       %{
+         candidate: update.candidate,
+         destination_status: update.destination_status,
+         source_status: update.source_status,
+       }}
     end
   end
 
-  defp validate_status_version(%{destination_status_id: status_id} = args) when not is_nil(status_id) do
+  defp validate_status_version(%{destination_status_id: status_id} = args)
+       when not is_nil(status_id) do
     case args do
       %{destination_status_version: version} when not is_nil(version) ->
         :ok
+
       _ ->
         {:error, "destination_status_version is required when destination_status_id is present"}
     end

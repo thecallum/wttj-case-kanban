@@ -28,8 +28,7 @@ defmodule Wttj.Candidates do
         {:error, "destination_status_version cannot be null"}
       end
 
-      result =
-        Repo.transaction(fn ->
+      Repo.transaction(fn ->
           # 1. Get both statuses with current versions
           source_status = fetch_and_lock_status(candidate.status_id)
           dest_status = destination_status_id && fetch_and_lock_status(destination_status_id)
@@ -54,24 +53,16 @@ defmodule Wttj.Candidates do
             |> Repo.update()
 
           # 4. Increment both version numbers
-          new_source_status_version = increment_version_number(source_status)
-          new_dest_status_version = dest_status && increment_version_number(dest_status)
+          source_status = increment_status_version(source_status)
+          dest_status = dest_status && increment_status_version(dest_status)
 
           # 5. Return the updated candidate
           %{
             candidate: updated_candidate,
-            source_version: new_source_status_version,
-            dest_version: new_dest_status_version
+            source_status: source_status,
+            destination_status: dest_status,
           }
         end)
-
-      case result do
-        {:error, :version_mismatch} ->
-          {:error, :version_mismatch}
-
-        {:ok, _} ->
-          {:ok, %{candidate: candidate}} = result
-          {:ok, candidate}
       end
     end
   end
@@ -96,12 +87,12 @@ defmodule Wttj.Candidates do
     status.lock_version == provided_version
   end
 
-  defp increment_version_number(status) do
+  defp increment_status_version(status) do
     new_version_number = status.lock_version + 1
 
     Repo.update!(Status.changeset(status, %{lock_version: new_version_number}))
 
-    new_version_number
+    # new_version_number
   end
 
   defp validate_status_owned_by_board(_candidate, nil), do: {:ok}

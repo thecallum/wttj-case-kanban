@@ -30,6 +30,7 @@ defmodule Wttj.Types.SchemaTypes do
     field :label, :string
     field :position, :integer
     field :job_id, :id
+    field :lock_version, :integer
   end
 
   @desc "Contains the details of a specific candidate"
@@ -46,6 +47,14 @@ defmodule Wttj.Types.SchemaTypes do
   object :candidate_moved do
     field :candidate, :candidate
     field :client_id, :string
+    field :source_status, :status
+    field :destination_status, :status
+  end
+
+  object :move_candidate_result do
+    field :candidate, :candidate
+    field :source_status, :status
+    field :destination_status, :status
   end
 
 end

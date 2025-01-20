@@ -30,7 +30,7 @@ defmodule Wttj.Schema do
 
   mutation do
     @desc "Move a candidate to a different position"
-    field :move_candidate, type: :candidate do
+    field :move_candidate, type: :move_candidate_result do
       arg(:candidate_id, non_null(:id))
       arg(:before_index, :display_order)
       arg(:after_index, :display_order)
