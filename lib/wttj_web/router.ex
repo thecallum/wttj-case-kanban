@@ -29,15 +29,6 @@ defmodule WttjWeb.Router do
     end
   end
 
-  scope "/api", WttjWeb do
-    pipe_through :api
-
-    resources "/jobs", JobController, except: [:new, :edit] do
-      resources "/candidates", CandidateController, except: [:new, :edit]
-      resources "/statuses", StatusController
-    end
-  end
-
   scope "/", WttjWeb do
     pipe_through :browser
 

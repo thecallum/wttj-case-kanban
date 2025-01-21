@@ -13,7 +13,7 @@ defmodule Wttj.StatusesTest do
   describe "statuses" do
     test "list_statuses/1 returns empty list" do
       ## Arrange
-      job_id = 1
+      job_id = 100
 
       ## Act
       response = Statuses.list_statuses(job_id)

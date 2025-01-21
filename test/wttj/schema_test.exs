@@ -56,6 +56,11 @@ defmodule Wttj.SchemaTest do
   end
 
   describe "query :jobs" do
+    setup do
+      Wttj.Repo.delete_all(Wttj.Jobs.Job)
+      :ok
+    end
+
     @list_jobs_query """
       query ListJobs {
         jobs {

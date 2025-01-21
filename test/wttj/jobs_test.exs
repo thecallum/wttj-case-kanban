@@ -10,6 +10,11 @@ defmodule Wttj.JobsTest do
 
     @invalid_attrs %{name: nil}
 
+    setup do
+      Wttj.Repo.delete_all(Wttj.Jobs.Job)
+      :ok
+    end
+
     test "list_jobs/0 returns all jobs" do
       job = job_fixture()
       assert Jobs.list_jobs() == [job]

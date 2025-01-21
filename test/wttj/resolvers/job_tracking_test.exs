@@ -30,6 +30,11 @@ defmodule Wttj.Resolvers.JobTrackingTest do
   end
 
   describe "list_jobs/3" do
+    setup do
+      Wttj.Repo.delete_all(Wttj.Jobs.Job)
+      :ok
+    end
+
     test "returns ok when jobs found" do
       # Arrange
       job1 = job_fixture()
