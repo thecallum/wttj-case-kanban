@@ -45,8 +45,12 @@ export const useBoard = (jobId: string) => {
     if (!verifyCandidateMoved(source, destination)) return
 
     const candidate = sortedCandidates[source.droppableId][source.index]
-    const { tempNewDisplayPosition, destinationColumnId, beforeIndex, afterIndex } =
-      calculateNewDisplayPosition(dropResult, destination!.droppableId)
+    const {
+      tempNewDisplayPosition,
+      destinationColumnId,
+      previousCandidateDisplayOrder,
+      nextCandidateDisplayOrder,
+    } = calculateNewDisplayPosition(dropResult, destination!.droppableId)
 
     updateCandidatePosition(candidate.id, tempNewDisplayPosition, destinationColumnId)
 
@@ -55,8 +59,8 @@ export const useBoard = (jobId: string) => {
 
     handleUpdateCandidate(
       candidate,
-      beforeIndex,
-      afterIndex,
+      previousCandidateDisplayOrder,
+      nextCandidateDisplayOrder,
       destinationColumnId,
       sourceColumn,
       destinationColumn
@@ -73,14 +77,14 @@ export const useBoard = (jobId: string) => {
     const tempNewDisplayPosition = calculateTempNewDisplayPosition(previousCandidate, nextCandidate)
 
     const destinationColumnId = parseInt(columnId)
-    const beforeIndex = previousCandidate?.displayOrder ?? null
-    const afterIndex = nextCandidate?.displayOrder ?? null
+    const previousCandidateDisplayOrder = previousCandidate?.displayOrder ?? null
+    const nextCandidateDisplayOrder = nextCandidate?.displayOrder ?? null
 
     return {
       tempNewDisplayPosition,
       destinationColumnId,
-      beforeIndex,
-      afterIndex,
+      previousCandidateDisplayOrder,
+      nextCandidateDisplayOrder,
     }
   }
 

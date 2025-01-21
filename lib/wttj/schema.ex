@@ -32,8 +32,8 @@ defmodule Wttj.Schema do
     @desc "Move a candidate to a different position"
     field :move_candidate, type: :move_candidate_result do
       arg(:candidate_id, non_null(:id))
-      arg(:before_index, :display_order)
-      arg(:after_index, :display_order)
+      arg(:previous_candidate_display_order, :display_order)
+      arg(:next_candidate_display_order, :display_order)
       arg(:client_id, non_null(:string))
       arg(:source_column_version, non_null(:integer))
 

@@ -236,16 +236,16 @@ defmodule Wttj.SchemaTest do
     @move_candidate_mutation """
       mutation MoveCandidate(
         $candidateId: ID!,
-        $beforeIndex: DisplayOrder,
-        $afterIndex: DisplayOrder,
+        $previousCandidateDisplayOrder: DisplayOrder,
+        $nextCandidateDisplayOrder: DisplayOrder,
         $destinationColumnId: ID,
         $clientId: String!,
         $sourceColumnVersion: Int!,
         $destinationColumnVersion: Int) {
         moveCandidate(
           candidateId: $candidateId,
-          beforeIndex: $beforeIndex,
-          afterIndex: $afterIndex,
+          previousCandidateDisplayOrder: $previousCandidateDisplayOrder,
+          nextCandidateDisplayOrder: $nextCandidateDisplayOrder,
           destinationColumnId: $destinationColumnId,
           clientId: $clientId,
           sourceColumnVersion: $sourceColumnVersion,
@@ -337,7 +337,7 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate3.id,
-            "afterIndex" => candidate1.display_order,
+            "nextCandidateDisplayOrder" => candidate1.display_order,
             "clientId" => @client_id,
             "sourceColumnVersion" => @source_column_version
           }
@@ -382,7 +382,7 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate1.id,
-            "beforeIndex" => candidate3.display_order,
+            "previousCandidateDisplayOrder" => candidate3.display_order,
             "clientId" => @client_id,
             "sourceColumnVersion" => @source_column_version
           }
@@ -428,8 +428,8 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate1.id,
-            "beforeIndex" => candidate2.display_order,
-            "afterIndex" => candidate3.display_order,
+            "previousCandidateDisplayOrder" => candidate2.display_order,
+            "nextCandidateDisplayOrder" => candidate3.display_order,
             "clientId" => @client_id,
             "sourceColumnVersion" => @source_column_version
           }
@@ -454,7 +454,7 @@ defmodule Wttj.SchemaTest do
              }
     end
 
-    test "returns error when before_index and after_index are invalid format" do
+    test "returns error when previous_candidate_display_order and next_candidate_display_order are invalid format" do
       # Arrange
 
       # Act
@@ -464,8 +464,8 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => 100,
-            "beforeIndex" => "1.2s",
-            "afterIndex" => "abcd",
+            "nextCandidateDisplayOrder" => "1.2s",
+            "previousCandidateDisplayOrder" => "abcd",
             "clientId" => @client_id,
             "sourceColumnVersion" => @source_column_version
           }
@@ -473,8 +473,8 @@ defmodule Wttj.SchemaTest do
 
       # Assert
       assert Enum.map(result.errors, fn error -> error.message end) == [
-               "Argument \"beforeIndex\" has invalid value $beforeIndex.\nInvalid format for type DisplayOrder. Expected a float, but as a string. For example '1', '2.5', '10.99'. The value '0' is not allowed.",
-               "Argument \"afterIndex\" has invalid value $afterIndex.\nInvalid format for type DisplayOrder. Expected a float, but as a string. For example '1', '2.5', '10.99'. The value '0' is not allowed."
+               "Argument \"previousCandidateDisplayOrder\" has invalid value $previousCandidateDisplayOrder.\nInvalid format for type DisplayOrder. Expected a float, but as a string. For example '1', '2.5', '10.99'. The value '0' is not allowed.",
+               "Argument \"nextCandidateDisplayOrder\" has invalid value $nextCandidateDisplayOrder.\nInvalid format for type DisplayOrder. Expected a float, but as a string. For example '1', '2.5', '10.99'. The value '0' is not allowed."
              ]
     end
 
@@ -579,8 +579,8 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate4.id,
-            "beforeIndex" => candidate1.display_order,
-            "afterIndex" => candidate3.display_order,
+            "previousCandidateDisplayOrder" => candidate1.display_order,
+            "nextCandidateDisplayOrder" => candidate3.display_order,
             "clientId" => @client_id,
             "sourceColumnVersion" => @source_column_version
           }

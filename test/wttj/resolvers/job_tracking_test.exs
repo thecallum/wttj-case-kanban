@@ -131,8 +131,8 @@ defmodule Wttj.Resolvers.JobTrackingTest do
 
       args = %{
         candidate_id: candidate.id,
-        before_index: nil,
-        after_index: nil,
+        previous_candidate_display_order: nil,
+        next_candidate_display_order: nil,
         destination_column_id: column2.id,
         client_id: @clientId,
         destination_column_version: @destination_column_version,

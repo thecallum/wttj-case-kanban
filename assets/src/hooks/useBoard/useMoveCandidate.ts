@@ -39,8 +39,8 @@ export const useMoveCandidate = (
 
   const handleUpdateCandidate = (
     candidate: Candidate,
-    beforeIndex: string | null,
-    afterIndex: string | null,
+    previousCandidateDisplayOrder: string | null,
+    nextCandidateDisplayOrder: string | null,
     destinationColumnId: number,
     sourceColumn: Column,
     destinationColumn: Column | null
@@ -52,8 +52,8 @@ export const useMoveCandidate = (
     const variables = {
       candidateId: candidate.id,
       destinationColumnId,
-      beforeIndex,
-      afterIndex,
+      previousCandidateDisplayOrder,
+      nextCandidateDisplayOrder,
       clientId: clientId,
       sourceColumnVersion: sourceColumn.lockVersion,
       destinationColumnVersion: destinationColumn?.lockVersion ?? null,

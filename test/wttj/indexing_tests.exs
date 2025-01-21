@@ -3,20 +3,20 @@ defmodule Wttj.IndexingTest do
   alias Wttj.Indexing
 
   @moduledoc """
-  Tests generate_index/2 method, which generates the next index for a candidate. This covers the following scenarios:
+  Tests generate_new_display_order/2 method, which generates the next index for a candidate. This covers the following scenarios:
   - No existing indices (new list)
   - Index generation between existing items
   - Index generation at the start of a list
   - Index generation at the end of a list
   """
 
-  describe "generate_index/2 when initializing first index" do
+  describe "generate_new_display_order/2 when initializing first index" do
     test "returns '1' as this is the first item" do
-      assert Indexing.generate_index(nil, nil) == {:ok, "1"}
+      assert Indexing.generate_new_display_order(nil, nil) == {:ok, "1"}
     end
   end
 
-  describe "generate_index/2 when inserting at start" do
+  describe "generate_new_display_order/2 when inserting at start" do
     @test_data [
       {"5.15", "4"},
       {"3.545", "2"},
@@ -27,12 +27,12 @@ defmodule Wttj.IndexingTest do
 
     for {input, expected} <- @test_data do
       test "returns #{expected} when input is #{input}" do
-        assert Indexing.generate_index(nil, unquote(input)) == {:ok, unquote(expected)}
+        assert Indexing.generate_new_display_order(nil, unquote(input)) == {:ok, unquote(expected)}
       end
     end
   end
 
-  describe "generate_index/2 when inserting at end" do
+  describe "generate_new_display_order/2 when inserting at end" do
     @test_data [
       {"5.15", "6"},
       {"3.545", "4"},
@@ -43,12 +43,12 @@ defmodule Wttj.IndexingTest do
 
     for {input, expected} <- @test_data do
       test "returns #{expected} when input is #{input}" do
-        assert Indexing.generate_index(unquote(input), nil) == {:ok, unquote(expected)}
+        assert Indexing.generate_new_display_order(unquote(input), nil) == {:ok, unquote(expected)}
       end
     end
   end
 
-  describe "generate_index/2 when inserting between items" do
+  describe "generate_new_display_order/2 when inserting between items" do
     @test_data [
       {"1", "2", "1.5"},
       {"0.1", "2", "1.05"},
@@ -66,7 +66,7 @@ defmodule Wttj.IndexingTest do
 
     for {a, b, expected} <- @test_data do
       test "returns #{expected} when inputs are #{a} and #{b}" do
-        assert Indexing.generate_index(unquote(a), unquote(b)) == {:ok, unquote(expected)}
+        assert Indexing.generate_new_display_order(unquote(a), unquote(b)) == {:ok, unquote(expected)}
       end
     end
   end

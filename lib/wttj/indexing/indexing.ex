@@ -9,8 +9,8 @@ defmodule Wttj.Indexing do
 
   ## Parameters
 
-  - `before_index`: The index of the item that comes before the insertion point (or nil if inserting at start)
-  - `after_index`: The index of the item that comes after the insertion point (or nil if inserting at end)
+  - `previous_display_order`: The index of the item that comes before the insertion point (or nil if inserting at start)
+  - `next_display_order`: The index of the item that comes after the insertion point (or nil if inserting at end)
 
   ## Returns
 
@@ -18,46 +18,48 @@ defmodule Wttj.Indexing do
 
   ## Examples
 
-      iex> generate_index(nil, nil)  # First item
+      iex> generate_new_display_order(nil, nil)  # First item
       "1"
 
-      iex> generate_index(nil, "5.15")  # Insert at start
+      iex> generate_new_display_order(nil, "5.15")  # Insert at start
       "4"
 
-      iex> generate_index("5.15", nil)  # Insert at end
+      iex> generate_new_display_order("5.15", nil)  # Insert at end
       "6"
 
-      iex> generate_index("1", "2")  # Insert between
+      iex> generate_new_display_order("1", "2")  # Insert between
       "1.5"
 
   ## Guards
 
   The function enforces these constraints:
-  - before_index must be nil or greater than 0
-  - after_index must be nil or greater than 0
-  - if both indices are present, after_index must be greater than before_index
+  - previous_display_order must be nil or greater than 0
+  - next_display_order must be nil or greater than 0
+  - if both indices are present, next_display_order must be greater than previous_display_order
   """
 
-  def generate_index(before_index, after_index)
-      when (is_nil(before_index) or before_index > 0) and
-             (is_nil(after_index) or
-                (after_index > 0 and (is_nil(before_index) or after_index > before_index))) do
-    case {before_index, after_index} do
+  def generate_new_display_order(previous_display_order, next_display_order)
+      when (is_nil(previous_display_order) or previous_display_order > 0) and
+             (is_nil(next_display_order) or
+                (next_display_order > 0 and
+                   (is_nil(previous_display_order) or
+                      next_display_order > previous_display_order))) do
+    case {previous_display_order, next_display_order} do
       {nil, nil} ->
         {:ok, "1"}
 
-      {nil, after_value} ->
-        {:ok, get_previous_number(after_value)}
+      {nil, next_display_order} ->
+        {:ok, get_display_order_top_of_list(next_display_order)}
 
-      {before_value, nil} ->
-        {:ok, get_next_number(before_value)}
+      {previous_display_order, nil} ->
+        {:ok, get_display_order_bottom_of_list(previous_display_order)}
 
-      {before_value, after_value} ->
-        {:ok, get_midpoint(before_value, after_value)}
+      {previous_display_order, next_display_order} ->
+        {:ok, get_midpoint(previous_display_order, next_display_order)}
     end
   end
 
-  defp get_previous_number(value) do
+  defp get_display_order_top_of_list(value) do
     {int_value, _} = Integer.parse(value)
 
     case int_value == 1 or int_value == 0 do
@@ -66,7 +68,7 @@ defmodule Wttj.Indexing do
     end
   end
 
-  defp get_next_number(value) do
+  defp get_display_order_bottom_of_list(value) do
     {int_value, _} = Integer.parse(value)
 
     (int_value + 1)

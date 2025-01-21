@@ -34,8 +34,8 @@ defmodule Wttj.Resolvers.JobTracking do
          {:ok, update} <-
            Candidates.update_candidate_display_order(
              args[:candidate_id],
-             args[:before_index],
-             args[:after_index],
+             args[:previous_candidate_display_order],
+             args[:next_candidate_display_order],
              args[:source_column_version],
              args[:destination_column_id],
              args[:destination_column_version]

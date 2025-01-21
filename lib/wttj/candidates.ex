@@ -11,8 +11,8 @@ defmodule Wttj.Candidates do
 
   def update_candidate_display_order(
         candidate_id,
-        before_index,
-        after_index,
+        previous_candidate_display_order,
+        next_candidate_display_order,
         source_column_version,
         destination_column_id \\ nil,
         destination_column_version \\ nil
@@ -21,9 +21,18 @@ defmodule Wttj.Candidates do
            validate_destination_column_version(destination_column_id, destination_column_version),
          {:ok, candidate} <- get_candidate_by_id(candidate_id),
          {:ok} <- validate_column_owned_by_board(candidate, destination_column_id),
-         {:ok, new_index} <- Indexing.generate_index(before_index, after_index),
+         {:ok, new_display_order} <-
+           Indexing.generate_new_display_order(
+             previous_candidate_display_order,
+             next_candidate_display_order
+           ),
          {:ok} <-
-           validate_move_candidate(before_index, after_index, candidate, destination_column_id) do
+           validate_move_candidate(
+             previous_candidate_display_order,
+             next_candidate_display_order,
+             candidate,
+             destination_column_id
+           ) do
       if !is_nil(destination_column_id) && is_nil(destination_column_version) do
         {:error, "destination_column_version cannot be null"}
       end
@@ -47,7 +56,7 @@ defmodule Wttj.Candidates do
         {:ok, updated_candidate} =
           candidate
           |> Candidate.changeset(%{
-            display_order: new_index,
+            display_order: new_display_order,
             column_id: destination_column_id || candidate.column_id
           })
           |> Repo.update()
@@ -112,10 +121,15 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate(before_index, after_index, candidate, destination_column_id) do
+  defp validate_move_candidate(
+         previous_candidate_display_order,
+         next_candidate_display_order,
+         candidate,
+         destination_column_id
+       ) do
     # board_id = candidate.
 
-    case {before_index, after_index} do
+    case {previous_candidate_display_order, next_candidate_display_order} do
       {nil, nil} ->
         if is_nil(destination_column_id) or candidate.column_id == destination_column_id do
           {:error, "candidate already exists in the list youre trying to move it to"}
@@ -126,26 +140,26 @@ defmodule Wttj.Candidates do
           )
         end
 
-      {nil, after_index} ->
+      {nil, next_candidate_display_order} ->
         validate_move_candidate_start_of_list(
           candidate.id,
           destination_column_id || candidate.column_id,
-          after_index
+          next_candidate_display_order
         )
 
-      {before_index, nil} ->
+      {previous_candidate_display_order, nil} ->
         validate_move_candidate_end_of_list(
           candidate.id,
           destination_column_id || candidate.column_id,
-          before_index
+          previous_candidate_display_order
         )
 
-      {before_index, after_index} ->
+      {previous_candidate_display_order, next_candidate_display_order} ->
         validate_move_candidate_middle_of_list(
           candidate.id,
           destination_column_id || candidate.column_id,
-          before_index,
-          after_index
+          previous_candidate_display_order,
+          next_candidate_display_order
         )
     end
   end
@@ -173,18 +187,22 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate_start_of_list(candidate_id, column_id, after_index) do
+  defp validate_move_candidate_start_of_list(
+         candidate_id,
+         column_id,
+         next_candidate_display_order
+       ) do
     query =
       from c in Candidate,
         where:
           c.column_id == ^column_id and
-            c.display_order <= ^after_index and
+            c.display_order <= ^next_candidate_display_order and
             c.id != ^candidate_id,
         order_by: [asc: c.display_order],
         select: c.display_order
 
     case Repo.all(query) do
-      [^after_index] ->
+      [^next_candidate_display_order] ->
         {:ok}
 
       result when length(result) > 1 ->
@@ -198,18 +216,22 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate_end_of_list(candidate_id, column_id, before_index) do
+  defp validate_move_candidate_end_of_list(
+         candidate_id,
+         column_id,
+         previous_candidate_display_order
+       ) do
     query =
       from c in Candidate,
         where:
           c.column_id == ^column_id and
-            c.display_order >= ^before_index and
+            c.display_order >= ^previous_candidate_display_order and
             c.id != ^candidate_id,
         order_by: [asc: c.display_order],
         select: c.display_order
 
     case Repo.all(query) do
-      [^before_index] ->
+      [^previous_candidate_display_order] ->
         {:ok}
 
       result when length(result) > 1 ->
@@ -223,19 +245,24 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate_middle_of_list(candidate_id, column_id, before_index, after_index) do
+  defp validate_move_candidate_middle_of_list(
+         candidate_id,
+         column_id,
+         previous_candidate_display_order,
+         next_candidate_display_order
+       ) do
     query =
       from c in Candidate,
         where:
           c.column_id == ^column_id and
-            c.display_order >= ^before_index and
-            c.display_order <= ^after_index and
+            c.display_order >= ^previous_candidate_display_order and
+            c.display_order <= ^next_candidate_display_order and
             c.id != ^candidate_id,
         order_by: [asc: c.display_order],
         select: c.display_order
 
     case Repo.all(query) do
-      [^before_index, ^after_index] ->
+      [^previous_candidate_display_order, ^next_candidate_display_order] ->
         {:ok}
 
       result when length(result) > 2 ->

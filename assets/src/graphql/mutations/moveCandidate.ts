@@ -3,16 +3,16 @@ import { gql } from '@apollo/client'
 export const MOVE_CANDIDATE = gql`
 mutation MoveCandidate(
   $candidateId: ID!, 
-  $afterIndex: DisplayOrder, 
-  $beforeIndex: DisplayOrder, 
+  $nextCandidateDisplayOrder: DisplayOrder, 
+  $previousCandidateDisplayOrder: DisplayOrder, 
   $destinationColumnId: ID,
   $clientId: String!,
   $sourceColumnVersion: Int!,
   $destinationColumnVersion: Int) {
   moveCandidate(
     candidateId: $candidateId, 
-    afterIndex: $afterIndex, 
-    beforeIndex: $beforeIndex, 
+    nextCandidateDisplayOrder: $nextCandidateDisplayOrder, 
+    previousCandidateDisplayOrder: $previousCandidateDisplayOrder, 
     destinationColumnId: $destinationColumnId,
     clientId: $clientId,
     sourceColumnVersion: $sourceColumnVersion,
