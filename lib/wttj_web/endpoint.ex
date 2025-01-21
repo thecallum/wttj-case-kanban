@@ -1,5 +1,9 @@
 defmodule WttjWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :wttj
+  use Phoenix.Endpoint,
+    otp_app: :wttj,
+    pubsub_server: :wttj_pubsub
+
+  use Absinthe.Phoenix.Endpoint
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -14,6 +18,10 @@ defmodule WttjWeb.Endpoint do
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
+
+  socket "/socket", WttjWeb.JobSocket,
+    websocket: true,
+    longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -49,5 +57,6 @@ defmodule WttjWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug CORSPlug, origin: ["http://localhost:5173"]
   plug WttjWeb.Router
 end

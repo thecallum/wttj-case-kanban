@@ -37,6 +37,9 @@ defmodule Wttj.Jobs do
   """
   def get_job!(id), do: Repo.get!(Job, id)
 
+  @doc "Gets a single job."
+  def get_job(id), do: Repo.get(Job, id)
+
   @doc """
   Creates a job.
 

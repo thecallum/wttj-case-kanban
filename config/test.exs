@@ -6,8 +6,8 @@ import Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :wttj, Wttj.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: "admin",
+  password: "root",
   hostname: "localhost",
   database: "wttj_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
@@ -35,3 +35,5 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+config :wttj, :subscription_publisher, Absinthe.Subscription

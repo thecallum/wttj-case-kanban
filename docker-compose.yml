@@ -1,0 +1,63 @@
+
+# https://medium.com/@jewelski/quickly-set-up-a-local-postgres-database-using-docker-5098052a4726
+
+version: '3.8'
+services:
+  phoenix:
+    image: phoenix
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - 4001:4001
+    environment:
+      - API_URL=http://localhost:4001/api/graphql/
+      - WS_URL=ws://localhost:4001/socket
+      # - DATABASE_URL=postgresql://admin:root@host.docker.internal:5432/wttj_dev
+      - DATABASE_URL=postgresql://admin:root@prod-db:5432/prod-db
+      - SECRET_KEY_BASE=2PQZqYDQ8YPXhOjLYCzlrPYhYfZKRWPSgz3EZoGtSCpIKqX9xDq+ShVr2IR7xYZp
+    links:
+      - prod-db
+  prod-db:
+    container_name: prod-db
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: prod-db
+    volumes:
+      - prod-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+
+  postgres:
+    container_name: wttj-db
+    image: postgres
+    hostname: localhost
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: wttj_dev
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: wttj-pgadmin
+    image: dpage/pgadmin4
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    restart: unless-stopped
+
+volumes:
+  prod-db-data:
+  postgres-data:

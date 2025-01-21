@@ -11,15 +11,21 @@ defmodule WttjWeb.Router do
   end
 
   pipeline :api do
+    plug CORSPlug, origin: ["http://localhost:5173"]
     plug :accepts, ["json"]
   end
 
-  # Other scopes may use custom stacks.
-  scope "/api", WttjWeb do
+  scope "/api" do
     pipe_through :api
 
-    resources "/jobs", JobController, except: [:new, :edit] do
-      resources "/candidates", CandidateController, except: [:new, :edit]
+    forward "/graphql", Absinthe.Plug,
+      schema: Wttj.Schema
+
+    if Mix.env() == :dev do
+      forward "/graphiql", Absinthe.Plug.GraphiQL,
+        schema: Wttj.Schema,
+        interface: :playground,
+        socket: WttjWeb.JobSocket
     end
   end
 
