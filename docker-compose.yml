@@ -28,7 +28,7 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: prod-db
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - prod-db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
 
@@ -59,4 +59,5 @@ services:
     restart: unless-stopped
 
 volumes:
+  prod-db-data:
   postgres-data:
