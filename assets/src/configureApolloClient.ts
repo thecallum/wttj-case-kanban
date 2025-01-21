@@ -1,20 +1,18 @@
-import { ApolloClient, InMemoryCache, HttpLink, split } from '@apollo/client'
+import { ApolloClient, InMemoryCache, HttpLink, split, ApolloLink } from '@apollo/client'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { Socket as PhoenixSocket } from 'phoenix'
 import * as AbsintheSocket from '@absinthe/socket'
 import { createAbsintheSocketLink } from '@absinthe/socket-apollo-link'
 
 const httpLink = new HttpLink({
-  uri: 'http://localhost:4000/api/graphql/',
+  uri: __API_URL__,
 })
 
-const phoenixSocket = new PhoenixSocket('ws://localhost:4000/socket', {
-  params: { token: window.userToken },
-})
+const phoenixSocket = new PhoenixSocket(__WS_URL__)
 
 const absintheSocket = AbsintheSocket.create(phoenixSocket)
 
-const wsLink = createAbsintheSocketLink(absintheSocket)
+const wsLink = createAbsintheSocketLink(absintheSocket) as unknown as ApolloLink
 
 const splitLink = split(
   ({ query }) => {

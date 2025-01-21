@@ -22,6 +22,23 @@ yarn
 yarn dev
 ```
 
+### Running the app via Docker
+
+It may take a few minutes to build. 
+
+```bash
+docker-compose build phoenix
+docker-compose up phoenix
+```
+
+The app should be running on [http://localhost:4001/](http://localhost:4001/).
+
+
+### Known issues
+
+- Currently, the `display_order` property is still stored as a string within the database. If the value of `display_order` for any candidate exceeds 10, it breaks the ordering validation. This will be most noticable if you try drag a candidate to the end of a list, after 10. You will see the error message "more than one candidate found within range".
+
+
 ### tests
 
 - backend: `mix test`
