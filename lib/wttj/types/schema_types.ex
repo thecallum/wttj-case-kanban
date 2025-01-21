@@ -36,7 +36,6 @@ defmodule Wttj.Types.SchemaTypes do
   @desc "Contains the details of a specific candidate"
   object :candidate do
     field :id, :id
-    field :position, :integer
     field :display_order, :display_order
     field :email, :string
     field :job_id, :id
