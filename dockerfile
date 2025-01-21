@@ -24,4 +24,6 @@ ENV PORT=4001
 ENV MIX_ENV=prod
 ENV PHX_SERVER=true
 
-CMD ["mix", "phx.server"]
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+CMD ["/app/entrypoint.sh"]
