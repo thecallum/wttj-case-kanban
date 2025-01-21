@@ -1,9 +1,9 @@
-defmodule Wttj.Statuses.Status do
+defmodule Wttj.Columns.Column do
   use Ecto.Schema
   import Ecto.Changeset
   alias Wttj.Candidates.Candidate
 
-  schema "statuses" do
+  schema "columns" do
     field :label, :string
     field :position, :integer
     field :job_id, :id
@@ -15,8 +15,8 @@ defmodule Wttj.Statuses.Status do
   end
 
   @doc false
-  def changeset(status, attrs) do
-    status
+  def changeset(column, attrs) do
+    column
     |> cast(attrs, [:label, :lock_version, :position, :job_id])
     |> validate_required([:label, :position, :job_id])
   end

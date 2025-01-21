@@ -2,7 +2,7 @@ defmodule Wttj.Resolvers.JobTrackingTest do
   use Wttj.DataCase
   alias Wttj.Resolvers.JobTracking
   import Wttj.JobsFixtures
-  import Wttj.StatusesFixtures
+  import Wttj.ColumnsFixtures
   import Wttj.CandidatesFixtures
   import Mox
 
@@ -30,6 +30,11 @@ defmodule Wttj.Resolvers.JobTrackingTest do
   end
 
   describe "list_jobs/3" do
+    setup do
+      Wttj.Repo.delete_all(Wttj.Jobs.Job)
+      :ok
+    end
+
     test "returns ok when jobs found" do
       # Arrange
       job1 = job_fixture()
@@ -44,21 +49,21 @@ defmodule Wttj.Resolvers.JobTrackingTest do
     end
   end
 
-  describe "list_statuses/3" do
-    test "returns ok when statuses found" do
+  describe "list_columns/3" do
+    test "returns ok when columns found" do
       # Arrange
       job1 = job_fixture()
       job2 = job_fixture()
 
-      status1 = status_fixture(%{job_id: job1.id})
-      status2 = status_fixture(%{job_id: job1.id})
-      status_fixture(%{job_id: job2.id})
+      column1 = column_fixture(%{job_id: job1.id})
+      column2 = column_fixture(%{job_id: job1.id})
+      column_fixture(%{job_id: job2.id})
 
       # Act
-      result = JobTracking.list_statuses(nil, %{job_id: job1.id}, nil)
+      result = JobTracking.list_columns(nil, %{job_id: job1.id}, nil)
 
       # Assert
-      assert {:ok, [status1, status2]} == result
+      assert {:ok, [column1, column2]} == result
     end
   end
 
@@ -66,10 +71,10 @@ defmodule Wttj.Resolvers.JobTrackingTest do
     test "returns ok when candidates found" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, display_order: "1", status_id: status1.id})
+        candidate_fixture(%{job_id: job1.id, display_order: "1", column_id: column1.id})
 
       # Act
       result = JobTracking.list_candidates(nil, %{job_id: job1.id}, nil)
@@ -81,8 +86,8 @@ defmodule Wttj.Resolvers.JobTrackingTest do
 
   describe "move_candidate/3" do
     @clientId "1234"
-    @destination_status_version 1
-    @source_status_version 1
+    @destination_column_version 1
+    @source_column_version 1
 
     defmodule WTTJ.Subscription do
       @callback publish(Plug.Conn.t() | atom(), map(), keyword()) :: :ok | {:error, term()}
@@ -106,8 +111,8 @@ defmodule Wttj.Resolvers.JobTrackingTest do
       args = %{
         candidate_id: 100,
         client_id: @clientId,
-        destination_status_version: @destination_status_version,
-        source_status_version: @source_status_version
+        destination_column_version: @destination_column_version,
+        source_column_version: @source_column_version
       }
 
       # Act
@@ -120,18 +125,18 @@ defmodule Wttj.Resolvers.JobTrackingTest do
     test "returns ok and publishes event" do
       # Arrange
       job = job_fixture()
-      status1 = status_fixture(%{job_id: job.id})
-      status2 = status_fixture(%{job_id: job.id})
-      candidate = candidate_fixture(%{job_id: job.id, status_id: status1.id, display_order: "1"})
+      column1 = column_fixture(%{job_id: job.id})
+      column2 = column_fixture(%{job_id: job.id})
+      candidate = candidate_fixture(%{job_id: job.id, column_id: column1.id, display_order: "1"})
 
       args = %{
         candidate_id: candidate.id,
-        before_index: nil,
-        after_index: nil,
-        destination_status_id: status2.id,
+        previous_candidate_display_order: nil,
+        next_candidate_display_order: nil,
+        destination_column_id: column2.id,
         client_id: @clientId,
-        destination_status_version: @destination_status_version,
-        source_status_version: @source_status_version
+        destination_column_version: @destination_column_version,
+        source_column_version: @source_column_version
       }
 
       expect(MockSubscription, :publish, fn endpoint, payload, topic ->
@@ -139,11 +144,11 @@ defmodule Wttj.Resolvers.JobTrackingTest do
         assert payload.candidate.id == candidate.id
         assert payload.client_id == @clientId
 
-        assert payload.source_status.id == status1.id
-        assert payload.source_status.lock_version == 2
+        assert payload.source_column.id == column1.id
+        assert payload.source_column.lock_version == 2
 
-        assert payload.destination_status.id == status2.id
-        assert payload.destination_status.lock_version == 2
+        assert payload.destination_column.id == column2.id
+        assert payload.destination_column.lock_version == 2
 
         assert topic == [candidate_moved: "candidate_moved:#{job.id}"]
         :ok

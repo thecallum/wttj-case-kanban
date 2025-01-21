@@ -1,63 +1,52 @@
 defmodule Wttj.Indexing do
   @moduledoc """
-  Provides functionality for generating ordered indices in a list, allowing for insertion
-  of items at any position while maintaining a consistent ordering.
+  Functions for generating a new `displayOrder` value.
   """
 
   @doc """
-  Generates the next index for inserting an item in a list.
+  Generates the next `displayOrder` value for when moving a candidate to a different position/column.
 
   ## Parameters
 
-  - `before_index`: The index of the item that comes before the insertion point (or nil if inserting at start)
-  - `after_index`: The index of the item that comes after the insertion point (or nil if inserting at end)
-
-  ## Returns
-
-  Returns a string representing the new index.
+  - `previous_display_order`: The `displayOrder` value of the candidate before insertion point (or nil)
+  - `next_display_order`: The `displayOrder` value of the candidate after insertion point (or nil)
 
   ## Examples
 
-      iex> generate_index(nil, nil)  # First item
+      iex> generate_new_display_order(nil, nil)  # First item
       "1"
 
-      iex> generate_index(nil, "5.15")  # Insert at start
+      iex> generate_new_display_order(nil, "5.15")  # Insert at start
       "4"
 
-      iex> generate_index("5.15", nil)  # Insert at end
+      iex> generate_new_display_order("5.15", nil)  # Insert at end
       "6"
 
-      iex> generate_index("1", "2")  # Insert between
+      iex> generate_new_display_order("1", "2")  # Insert between
       "1.5"
-
-  ## Guards
-
-  The function enforces these constraints:
-  - before_index must be nil or greater than 0
-  - after_index must be nil or greater than 0
-  - if both indices are present, after_index must be greater than before_index
   """
-
-  def generate_index(before_index, after_index)
-      when (is_nil(before_index) or before_index > 0) and
-             (is_nil(after_index) or
-                (after_index > 0 and (is_nil(before_index) or after_index > before_index))) do
-    case {before_index, after_index} do
+  def generate_new_display_order(previous_display_order, next_display_order)
+      when (is_nil(previous_display_order) or previous_display_order > 0) and
+             (is_nil(next_display_order) or
+                (next_display_order > 0 and
+                   (is_nil(previous_display_order) or
+                      next_display_order > previous_display_order))) do
+    case {previous_display_order, next_display_order} do
       {nil, nil} ->
         {:ok, "1"}
 
-      {nil, after_value} ->
-        {:ok, get_previous_number(after_value)}
+      {nil, next_display_order} ->
+        {:ok, get_display_order_top_of_list(next_display_order)}
 
-      {before_value, nil} ->
-        {:ok, get_next_number(before_value)}
+      {previous_display_order, nil} ->
+        {:ok, get_display_order_bottom_of_list(previous_display_order)}
 
-      {before_value, after_value} ->
-        {:ok, get_midpoint(before_value, after_value)}
+      {previous_display_order, next_display_order} ->
+        {:ok, get_midpoint(previous_display_order, next_display_order)}
     end
   end
 
-  defp get_previous_number(value) do
+  defp get_display_order_top_of_list(value) do
     {int_value, _} = Integer.parse(value)
 
     case int_value == 1 or int_value == 0 do
@@ -66,7 +55,7 @@ defmodule Wttj.Indexing do
     end
   end
 
-  defp get_next_number(value) do
+  defp get_display_order_bottom_of_list(value) do
     {int_value, _} = Integer.parse(value)
 
     (int_value + 1)
@@ -84,20 +73,12 @@ defmodule Wttj.Indexing do
     end
   end
 
-  @doc """
-  Gets the midpoint between two numbers while handling decimal places accurately.
-
-  The function handles decimal precision by:
-  1. Converting both numbers to integers
-  2. Calculating the midpoint of the integers
-  3. Converting back to the original decimal precision
-
-  Note: There may be precision limitations based on Decimal specifications.
-  If precision issues arise, a reindexing process could be implemented.
-
-  See: https://hexdocs.pm/decimal/Decimal.html#module-specifications
-  """
   defp get_midpoint(a, b) do
+    # Finds the midpoint between two floats
+    # The idea was, by converting the floats to decimals, it would avoid floating point rounding errors
+    # But testing has proven that this isnt the case. You will still get rounding errors
+    # This method needs a way to handle floating point rounding errors
+
     most_decimal_points = max(count_decimal_places(a), count_decimal_places(b))
 
     multiplier =
@@ -113,15 +94,8 @@ defmodule Wttj.Indexing do
     |> to_string()
   end
 
-  @doc """
-  Counts the number of decimal places in a number.
-
-  Handles the edge cases by:
-  - Splitting the string on decimal point
-  - If there's a decimal part, returns its length
-  - If there's no decimal part, returns 0
-  """
   defp count_decimal_places(number) do
+    # Counts the number of decimal places in a float. For example "1.234 => 3"
     number
     |> String.split(".")
     |> case do

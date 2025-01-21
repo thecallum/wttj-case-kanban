@@ -1,16 +1,15 @@
 defmodule Wttj.Candidates.Candidate do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Wttj.Statuses.Status
+  alias Wttj.Columns.Column
   alias Wttj.Validation.DisplayOrder
 
   schema "candidates" do
-    field :position, :integer
     field :display_order, :string
     field :email, :string
     field :job_id, :id
 
-    belongs_to :status, Status
+    belongs_to :column, Column
 
     timestamps(type: :utc_datetime)
   end
@@ -18,10 +17,10 @@ defmodule Wttj.Candidates.Candidate do
   @doc false
   def changeset(candidate, attrs) do
     candidate
-    |> cast(attrs, [:email, :status_id, :position, :display_order, :job_id])
-    |> validate_required([:email, :status_id, :position, :display_order, :job_id])
+    |> cast(attrs, [:email, :column_id, :display_order, :job_id])
+    |> validate_required([:email, :column_id, :display_order, :job_id])
     |> validate_display_order()
-    |> unique_constraint([:status_id, :display_order], name: :candidates_status_id_display_order_index)
+    |> unique_constraint([:column_id, :display_order], name: :candidates_column_id_display_order_index)
   end
 
   defp validate_display_order(changeset) do

@@ -1,4 +1,4 @@
-import { Candidate, Status } from '../../types'
+import { Candidate, Column } from '../../types'
 
 export interface SortedCandidates {
   [key: string]: Candidate[]
@@ -8,15 +8,15 @@ export interface CandidateMovedSubscription {
   candidateMoved: {
     clientId: string
     candidate: Candidate
-    sourceStatus: Status
-    destinationStatus: Status
+    sourceColumn: Column
+    destinationColumn: Column
   }
 }
 
 export interface MoveCandidateMutation {
   moveCandidate: {
     candidate: Candidate
-    sourceStatus: Status
-    destinationStatus: Status
+    sourceColumn: Column
+    destinationColumn: Column
   }
 }

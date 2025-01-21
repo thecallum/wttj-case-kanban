@@ -3,33 +3,32 @@ import { gql } from '@apollo/client'
 export const MOVE_CANDIDATE = gql`
 mutation MoveCandidate(
   $candidateId: ID!, 
-  $afterIndex: DisplayOrder, 
-  $beforeIndex: DisplayOrder, 
-  $destinationStatusId: ID,
+  $nextCandidateDisplayOrder: DisplayOrder, 
+  $previousCandidateDisplayOrder: DisplayOrder, 
+  $destinationColumnId: ID,
   $clientId: String!,
-  $sourceStatusVersion: Int!,
-  $destinationStatusVersion: Int) {
+  $sourceColumnVersion: Int!,
+  $destinationColumnVersion: Int) {
   moveCandidate(
     candidateId: $candidateId, 
-    afterIndex: $afterIndex, 
-    beforeIndex: $beforeIndex, 
-    destinationStatusId: $destinationStatusId,
+    nextCandidateDisplayOrder: $nextCandidateDisplayOrder, 
+    previousCandidateDisplayOrder: $previousCandidateDisplayOrder, 
+    destinationColumnId: $destinationColumnId,
     clientId: $clientId,
-    sourceStatusVersion: $sourceStatusVersion,
-    destinationStatusVersion: $destinationStatusVersion) {
+    sourceColumnVersion: $sourceColumnVersion,
+    destinationColumnVersion: $destinationColumnVersion) {
     candidate {
       id
       email
       jobId
-      position
       displayOrder
-      statusId
+      columnId
     }
-    sourceStatus {
+    sourceColumn {
       id
       lockVersion
     }
-    destinationStatus {
+    destinationColumn {
       id
       lockVersion
     }

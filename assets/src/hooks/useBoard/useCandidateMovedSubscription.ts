@@ -7,7 +7,7 @@ export const useCandidateMovedSubscription = (
   jobId: string,
   clientId: string,
   onCandidateMoved: (candidate: Candidate) => void,
-  onStatusUpdate: (statusId: number, newVersion: number) => void
+  onStatusUpdate: (columnId: number, newVersion: number) => void
 ) => {
   const handleOnSubscriptionData = (data: OnDataOptions<CandidateMovedSubscription>) => {
     const candidateMoved = data.data.data!.candidateMoved
@@ -17,9 +17,9 @@ export const useCandidateMovedSubscription = (
 
     onCandidateMoved(candidateMoved.candidate)
 
-    const { sourceStatus, destinationStatus } = candidateMoved
-    onStatusUpdate(sourceStatus.id, sourceStatus.lockVersion)
-    onStatusUpdate(destinationStatus.id, destinationStatus.lockVersion)
+    const { sourceColumn, destinationColumn } = candidateMoved
+    onStatusUpdate(sourceColumn.id, sourceColumn.lockVersion)
+    onStatusUpdate(destinationColumn.id, destinationColumn.lockVersion)
   }
 
   useSubscription<CandidateMovedSubscription>(CANDIDATE_MOVED, {

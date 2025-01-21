@@ -2,24 +2,24 @@ import { ApolloError, useMutation } from '@apollo/client'
 import { MoveCandidateMutation } from './types'
 import { MOVE_CANDIDATE } from '../../graphql/mutations/moveCandidate'
 import { useState } from 'react'
-import { Candidate, Status } from '../../types'
+import { Candidate, Column } from '../../types'
 
 export const useMoveCandidate = (
   clientId: string,
-  updateCandidatePosition: (id: number, displayOrder: string, statusId: number) => void,
-  updateStatusVersion: (statusId: number, newVersion: number) => void
+  updateCandidatePosition: (id: number, displayOrder: string, columnId: number) => void,
+  updateColumnVersion: (columnId: number, newVersion: number) => void
 ) => {
   const handleOnUpdateSuccess = (data: MoveCandidateMutation) => {
     // reset error
     setUpdateError(null)
 
-    const { id, displayOrder, statusId } = data.moveCandidate.candidate
-    updateCandidatePosition(id, displayOrder, statusId)
+    const { id, displayOrder, columnId } = data.moveCandidate.candidate
+    updateCandidatePosition(id, displayOrder, columnId)
 
-    const {sourceStatus, destinationStatus } = data.moveCandidate
+    const {sourceColumn, destinationColumn } = data.moveCandidate
     
-    updateStatusVersion(sourceStatus.id, sourceStatus.lockVersion)
-    updateStatusVersion(destinationStatus.id, destinationStatus.lockVersion)
+    updateColumnVersion(sourceColumn.id, sourceColumn.lockVersion)
+    updateColumnVersion(destinationColumn.id, destinationColumn.lockVersion)
   }
 
   const handleOnUpdateError = (error: ApolloError) => {
@@ -28,8 +28,8 @@ export const useMoveCandidate = (
     setUpdateError(error.message)
 
     // revert candidate back to previous position
-    const { id, displayOrder, statusId } = candidateSnapshot!
-    updateCandidatePosition(id, displayOrder, statusId)
+    const { id, displayOrder, columnId } = candidateSnapshot!
+    updateCandidatePosition(id, displayOrder, columnId)
   }
 
   const [updateCandiate] = useMutation<MoveCandidateMutation>(MOVE_CANDIDATE, {
@@ -39,11 +39,11 @@ export const useMoveCandidate = (
 
   const handleUpdateCandidate = (
     candidate: Candidate,
-    beforeIndex: string | null,
-    afterIndex: string | null,
-    destinationStatusId: number,
-    sourceStatus: Status,
-    destinationStatus: Status | null
+    previousCandidateDisplayOrder: string | null,
+    nextCandidateDisplayOrder: string | null,
+    destinationColumnId: number,
+    sourceColumn: Column,
+    destinationColumn: Column | null
   ) => {
     // store snapshot of current state, so candidate can be reverted
     // if update fails
@@ -51,12 +51,12 @@ export const useMoveCandidate = (
 
     const variables = {
       candidateId: candidate.id,
-      destinationStatusId,
-      beforeIndex,
-      afterIndex,
+      destinationColumnId,
+      previousCandidateDisplayOrder,
+      nextCandidateDisplayOrder,
       clientId: clientId,
-      sourceStatusVersion: sourceStatus.lockVersion,
-      destinationStatusVersion: destinationStatus?.lockVersion ?? null,
+      sourceColumnVersion: sourceColumn.lockVersion,
+      destinationColumnVersion: destinationColumn?.lockVersion ?? null,
     }
 
 

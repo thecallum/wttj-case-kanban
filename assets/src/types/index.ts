@@ -3,7 +3,7 @@ export type Job = {
   name: string
 }
 
-export type Status = {
+export type Column = {
   id: number
   label: number
   position: number
@@ -13,6 +13,6 @@ export type Status = {
 export type Candidate = {
   id: number
   email: string
-  statusId: number
+  columnId: number
   displayOrder: string
 }

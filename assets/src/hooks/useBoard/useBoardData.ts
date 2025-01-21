@@ -1,4 +1,4 @@
-import { Candidate, Job, Status } from '../../types'
+import { Candidate, Job, Column } from '../../types'
 import { GET_BOARD } from '../../graphql/queries/getBoard'
 import { useQuery } from '@apollo/client'
 import { useSortedCandidates } from './useSortedCandidates'
@@ -8,21 +8,21 @@ export const useBoardData = (jobId: string) => {
   const { loading, error } = useQuery<{
     job: Job
     candidates: Candidate[]
-    statuses: Status[]
+    columns: Column[]
   }>(GET_BOARD, {
     variables: { jobId },
     onCompleted(data) {
       setJob(() => data?.job ?? null)
       setCandidates(() => data?.candidates || [])
-      setStatuses(() => data?.statuses || [])
+      setColumns(() => data?.columns || [])
     },
   })
 
   const [job, setJob] = useState<Job | null>(null)
   const [candidates, setCandidates] = useState<Candidate[]>([])
-  const [statuses, setStatuses] = useState<Status[]>([])
+  const [columns, setColumns] = useState<Column[]>([])
 
-  const updateCandidatePosition = (candidateId: number, displayOrder: string, statusId: number) => {
+  const updateCandidatePosition = (candidateId: number, displayOrder: string, columnId: number) => {
     setCandidates(data => {
       return data.map(x => {
         if (x.id != candidateId) return x
@@ -30,16 +30,16 @@ export const useBoardData = (jobId: string) => {
         return {
           ...x,
           displayOrder,
-          statusId,
+          columnId,
         }
       })
     })
   }
 
-  const updateStatusVersion = (statusId: number, newVersion: number) => {
-    setStatuses(data => {
+  const updateColumnVersion = (columnId: number, newVersion: number) => {
+    setColumns(data => {
       return data.map(x => {
-        if (x.id !== statusId) return x
+        if (x.id !== columnId) return x
 
         return {
           ...x,
@@ -49,10 +49,10 @@ export const useBoardData = (jobId: string) => {
     })
   }
 
-  const sortedCandidates = useSortedCandidates(candidates, statuses)
+  const sortedCandidates = useSortedCandidates(candidates, columns)
 
-  const statusesById = statuses.reduce<{ [key: number]: Status }>((acc, status: Status) => {
-    acc[status.id] = status
+  const columnsById = columns.reduce<{ [key: number]: Column }>((acc, column: Column) => {
+    acc[column.id] = column
 
     return acc
   }, {})
@@ -61,10 +61,10 @@ export const useBoardData = (jobId: string) => {
     loading,
     error,
     sortedCandidates,
-    statuses,
-    statusesById,
+    columns,
+    columnsById,
     job,
     updateCandidatePosition,
-    updateStatusVersion,
+    updateColumnVersion,
   }
 }

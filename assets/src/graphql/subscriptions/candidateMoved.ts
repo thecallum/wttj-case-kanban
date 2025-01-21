@@ -9,14 +9,14 @@ subscription TestSubscription($jobId: ID!) {
       jobId
       position
       displayOrder
-      statusId
+      columnId
     }
     clientId
-    sourceStatus {
+    sourceColumn {
       id
       lockVersion
     }
-    destinationStatus {
+    destinationColumn {
       id
       lockVersion
     }

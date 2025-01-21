@@ -10,10 +10,10 @@ export const GET_BOARD = gql`
       email
       id
       jobId
-      statusId
+      columnId
       displayOrder
     }
-    statuses(jobId: $jobId) {
+    columns(jobId: $jobId) {
       id
       jobId
       position
