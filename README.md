@@ -34,6 +34,10 @@ docker-compose up phoenix
 The app should be running on [http://localhost:4001/](http://localhost:4001/).
 
 
+### Notes
+
+The git/commit history is a bit messy. Its hard to implement everything in an atomic way when there is so much to do, and youre still learning the programming lanaugae. I refactored and added documentation subsequently once I knew things werent going to change. 
+
 ### Known issues
 
 - Currently, the `display_order` property is still stored as a string within the database. If the value of `display_order` for any candidate exceeds 10, it breaks the ordering validation. This will be most noticable if you try drag a candidate to the end of a list, after 10. You will see the error message "more than one candidate found within range".

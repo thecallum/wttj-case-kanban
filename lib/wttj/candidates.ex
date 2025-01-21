@@ -9,6 +9,36 @@ defmodule Wttj.Candidates do
   alias Wttj.Candidates.Candidate
   alias Wttj.Columns.Column
 
+  @doc """
+  Updates the display order of a candiate, and optionaly moves the candidate to another column
+
+  This function handles the complex logic of moving candidates within or between columns
+  while maintaining proper ordering and ensuring data consistency through versioning.
+  The operation is wrapped in a transaction to ensure atomicity.
+
+  ## Parameters
+    * candidate_id - The ID of the candidate to move
+    * previous_candidate_display_order - The display order of the candidate before insertion point
+    * next_candidate_display_order - The display order of the candidate after insertion point
+    * source_column_version - The lock_version of the source column (for optimistic locking)
+    * destination_column_id - The ID of the column to move the candidate to (optional)
+    * destination_column_version - The lock_version of the destination column (required if destination_column_id is present)
+
+  ## Returns
+    * `{:ok, %{candidate: candidate, source_column: column, destination_column: column}}` - The move was successful
+    * `{:error, reason}` - The move failed with the given reason
+
+  ## Examples
+      iex> update_candidate_display_order(123, "1.0", "2.0", 1, nil, nil)
+      {:ok, %{candidate: %Candidate{}, source_column: %Column{}, destination_column: nil}}
+
+      iex> update_candidate_display_order(123, "1.0", "2.0", 1, 456, 2)
+      {:ok, %{candidate: %Candidate{}, source_column: %Column{}, destination_column: %Column{}}}
+
+      iex> update_candidate_display_order(123, "1.0", "2.0", 1, 456, 2)
+      {:error, :version_mismatch}
+
+  """
   def update_candidate_display_order(
         candidate_id,
         previous_candidate_display_order,

@@ -1,20 +1,15 @@
 defmodule Wttj.Indexing do
   @moduledoc """
-  Provides functionality for generating ordered indices in a list, allowing for insertion
-  of items at any position while maintaining a consistent ordering.
+  Functions for generating a new `displayOrder` value.
   """
 
   @doc """
-  Generates the next index for inserting an item in a list.
+  Generates the next `displayOrder` value for when moving a candidate to a different position/column.
 
   ## Parameters
 
-  - `previous_display_order`: The index of the item that comes before the insertion point (or nil if inserting at start)
-  - `next_display_order`: The index of the item that comes after the insertion point (or nil if inserting at end)
-
-  ## Returns
-
-  Returns a string representing the new index.
+  - `previous_display_order`: The `displayOrder` value of the candidate before insertion point (or nil)
+  - `next_display_order`: The `displayOrder` value of the candidate after insertion point (or nil)
 
   ## Examples
 
@@ -29,15 +24,7 @@ defmodule Wttj.Indexing do
 
       iex> generate_new_display_order("1", "2")  # Insert between
       "1.5"
-
-  ## Guards
-
-  The function enforces these constraints:
-  - previous_display_order must be nil or greater than 0
-  - next_display_order must be nil or greater than 0
-  - if both indices are present, next_display_order must be greater than previous_display_order
   """
-
   def generate_new_display_order(previous_display_order, next_display_order)
       when (is_nil(previous_display_order) or previous_display_order > 0) and
              (is_nil(next_display_order) or
@@ -86,20 +73,12 @@ defmodule Wttj.Indexing do
     end
   end
 
-  @doc """
-  Gets the midpoint between two numbers while handling decimal places accurately.
-
-  The function handles decimal precision by:
-  1. Converting both numbers to integers
-  2. Calculating the midpoint of the integers
-  3. Converting back to the original decimal precision
-
-  Note: There may be precision limitations based on Decimal specifications.
-  If precision issues arise, a reindexing process could be implemented.
-
-  See: https://hexdocs.pm/decimal/Decimal.html#module-specifications
-  """
   defp get_midpoint(a, b) do
+    # Finds the midpoint between two floats
+    # The idea was, by converting the floats to decimals, it would avoid floating point rounding errors
+    # But testing has proven that this isnt the case. You will still get rounding errors
+    # This method needs a way to handle floating point rounding errors
+
     most_decimal_points = max(count_decimal_places(a), count_decimal_places(b))
 
     multiplier =
@@ -115,15 +94,8 @@ defmodule Wttj.Indexing do
     |> to_string()
   end
 
-  @doc """
-  Counts the number of decimal places in a number.
-
-  Handles the edge cases by:
-  - Splitting the string on decimal point
-  - If there's a decimal part, returns its length
-  - If there's no decimal part, returns 0
-  """
   defp count_decimal_places(number) do
+    # Counts the number of decimal places in a float. For example "1.234 => 3"
     number
     |> String.split(".")
     |> case do
