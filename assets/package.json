@@ -24,6 +24,7 @@
     "@welcome-ui/tag": "^6.0.0",
     "@welcome-ui/text": "^6.0.0",
     "@xstyled/styled-components": "^4.0.0",
+    "dotenv": "^16.4.7",
     "graphql": "^16.10.0",
     "graphql-ws": "^6.0.1",
     "phoenix": "^1.7.18",

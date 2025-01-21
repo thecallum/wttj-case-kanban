@@ -14,6 +14,14 @@ config :wttj,
 # Configures the endpoint
 config :wttj, WttjWeb.Endpoint,
   url: [host: "localhost"],
+  static_url: [path: "/"],
+  check_origin: false,
+  plug_static: [
+    at: "/",
+    from: :wttj,
+    gzip: false,
+    only: ~w(assets fonts images favicon.ico robots.txt index.js)
+  ],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: WttjWeb.ErrorHTML, json: WttjWeb.ErrorJSON],
