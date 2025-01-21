@@ -21,7 +21,6 @@ mutation MoveCandidate(
       id
       email
       jobId
-      position
       displayOrder
       columnId
     }

@@ -5,7 +5,6 @@ defmodule Wttj.Candidates.Candidate do
   alias Wttj.Validation.DisplayOrder
 
   schema "candidates" do
-    field :position, :integer
     field :display_order, :string
     field :email, :string
     field :job_id, :id
@@ -18,8 +17,8 @@ defmodule Wttj.Candidates.Candidate do
   @doc false
   def changeset(candidate, attrs) do
     candidate
-    |> cast(attrs, [:email, :column_id, :position, :display_order, :job_id])
-    |> validate_required([:email, :column_id, :position, :display_order, :job_id])
+    |> cast(attrs, [:email, :column_id, :display_order, :job_id])
+    |> validate_required([:email, :column_id, :display_order, :job_id])
     |> validate_display_order()
     |> unique_constraint([:column_id, :display_order], name: :candidates_column_id_display_order_index)
   end

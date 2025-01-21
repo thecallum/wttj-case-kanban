@@ -168,7 +168,6 @@ defmodule Wttj.SchemaTest do
           email
           id
           jobId
-          position
           columnId
           displayOrder
         }
@@ -201,7 +200,6 @@ defmodule Wttj.SchemaTest do
                    "email" => candidate1.email,
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
-                   "position" => candidate1.position,
                    "columnId" => to_string(candidate1.column_id),
                    "displayOrder" => candidate1.display_order
                  },
@@ -209,7 +207,6 @@ defmodule Wttj.SchemaTest do
                    "email" => candidate2.email,
                    "id" => to_string(candidate2.id),
                    "jobId" => to_string(candidate2.job_id),
-                   "position" => candidate2.position,
                    "columnId" => to_string(candidate2.column_id),
                    "displayOrder" => candidate2.display_order
                  }
@@ -257,7 +254,6 @@ defmodule Wttj.SchemaTest do
             id
             email
             jobId
-            position
             displayOrder
             columnId
           }
@@ -306,7 +302,6 @@ defmodule Wttj.SchemaTest do
                    "email" => candidate1.email,
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
-                   "position" => candidate1.position,
                    "columnId" => to_string(column2.id),
                    "displayOrder" => "1"
                  },
@@ -355,7 +350,6 @@ defmodule Wttj.SchemaTest do
                    "email" => candidate3.email,
                    "id" => to_string(candidate3.id),
                    "jobId" => to_string(candidate3.job_id),
-                   "position" => candidate3.position,
                    "columnId" => to_string(column1.id),
                    "displayOrder" => "0.5"
                  },
@@ -401,7 +395,6 @@ defmodule Wttj.SchemaTest do
                    "email" => candidate1.email,
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
-                   "position" => candidate1.position,
                    "columnId" => to_string(column1.id),
                    "displayOrder" => "4"
                  },
@@ -449,7 +442,6 @@ defmodule Wttj.SchemaTest do
                    "email" => candidate1.email,
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
-                   "position" => candidate1.position,
                    "columnId" => to_string(column1.id),
                    "displayOrder" => "2.5"
                  },

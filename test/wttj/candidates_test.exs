@@ -64,12 +64,11 @@ defmodule Wttj.CandidatesTest do
     } do
       candidate = candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "1"})
       email = unique_user_email()
-      update_attrs = %{position: 43, status: :rejected, email: email, column_id: column1.id}
+      update_attrs = %{status: :rejected, email: email, column_id: column1.id}
 
       assert {:ok, %Candidate{} = candidate} =
                Candidates.update_candidate(candidate, update_attrs)
 
-      assert candidate.position == 43
       assert candidate.column_id == column1.id
       assert candidate.email == email
     end
