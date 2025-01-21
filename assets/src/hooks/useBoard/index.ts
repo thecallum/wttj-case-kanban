@@ -18,25 +18,25 @@ export const useBoard = (jobId: string) => {
     error,
     sortedCandidates,
     job,
-    statuses,
-    statusesById,
+    columns,
+    columnsById,
     updateCandidatePosition,
-    updateStatusVersion,
+    updateColumnVersion,
   } = useBoardData(jobId)
 
   useCandidateMovedSubscription(
     jobId,
     clientId.current,
     (candidate: Candidate) => {
-      updateCandidatePosition(candidate.id, candidate.displayOrder, candidate.statusId)
+      updateCandidatePosition(candidate.id, candidate.displayOrder, candidate.columnId)
     },
-    updateStatusVersion
+    updateColumnVersion
   )
 
   const { handleUpdateCandidate, updateError } = useMoveCandidate(
     clientId.current,
     updateCandidatePosition, // callback when update is successful, or reverted back to snapshot
-    updateStatusVersion
+    updateColumnVersion
   )
 
   const handleOnDragEnd = (dropResult: DropResult) => {
@@ -45,25 +45,25 @@ export const useBoard = (jobId: string) => {
     if (!verifyCandidateMoved(source, destination)) return
 
     const candidate = sortedCandidates[source.droppableId][source.index]
-    const { tempNewDisplayPosition, destinationStatusId, beforeIndex, afterIndex } =
+    const { tempNewDisplayPosition, destinationColumnId, beforeIndex, afterIndex } =
       calculateNewDisplayPosition(dropResult, destination!.droppableId)
 
-    updateCandidatePosition(candidate.id, tempNewDisplayPosition, destinationStatusId)
+    updateCandidatePosition(candidate.id, tempNewDisplayPosition, destinationColumnId)
 
-    const sourceStatus = statusesById[parseInt(source.droppableId)]
-    const destinationStatus = destination ? statusesById[parseInt(destination!.droppableId)] : null
+    const sourceColumn = columnsById[parseInt(source.droppableId)]
+    const destinationColumn = destination ? columnsById[parseInt(destination!.droppableId)] : null
 
     handleUpdateCandidate(
       candidate,
       beforeIndex,
       afterIndex,
-      destinationStatusId,
-      sourceStatus,
-      destinationStatus
+      destinationColumnId,
+      sourceColumn,
+      destinationColumn
     )
   }
 
-  const calculateNewDisplayPosition = (dropResult: DropResult, statusId: string) => {
+  const calculateNewDisplayPosition = (dropResult: DropResult, columnId: string) => {
     const { previousCandidate, nextCandidate } = getSibblingCandidates(sortedCandidates, dropResult)
 
     // We're using optimistic UI updates. This means, the UI will be updated before we get a response
@@ -72,13 +72,13 @@ export const useBoard = (jobId: string) => {
     // Else, it will be reverted
     const tempNewDisplayPosition = calculateTempNewDisplayPosition(previousCandidate, nextCandidate)
 
-    const destinationStatusId = parseInt(statusId)
+    const destinationColumnId = parseInt(columnId)
     const beforeIndex = previousCandidate?.displayOrder ?? null
     const afterIndex = nextCandidate?.displayOrder ?? null
 
     return {
       tempNewDisplayPosition,
-      destinationStatusId,
+      destinationColumnId,
       beforeIndex,
       afterIndex,
     }
@@ -88,7 +88,7 @@ export const useBoard = (jobId: string) => {
     loading,
     error,
     job,
-    statuses,
+    columns,
     sortedCandidates,
     handleOnDragEnd,
     updateError,

@@ -15,10 +15,10 @@ defmodule Wttj.Schema do
       resolve(&Resolvers.JobTracking.list_jobs/3)
     end
 
-    @desc "Get all statuses"
-    field :statuses, list_of(:status) do
+    @desc "Get all columns"
+    field :columns, list_of(:column) do
       arg(:job_id, non_null(:id))
-      resolve(&Resolvers.JobTracking.list_statuses/3)
+      resolve(&Resolvers.JobTracking.list_columns/3)
     end
 
     @desc "Get all candidates"
@@ -35,10 +35,10 @@ defmodule Wttj.Schema do
       arg(:before_index, :display_order)
       arg(:after_index, :display_order)
       arg(:client_id, non_null(:string))
-      arg(:source_status_version, non_null(:integer))
+      arg(:source_column_version, non_null(:integer))
 
-      arg(:destination_status_id, :id)
-      arg(:destination_status_version, :integer)
+      arg(:destination_column_id, :id)
+      arg(:destination_column_version, :integer)
 
       resolve(&Resolvers.JobTracking.move_candidate/3)
     end

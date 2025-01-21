@@ -1,5 +1,5 @@
 defmodule Wttj.Resolvers.JobTracking do
-  alias Wttj.{Jobs, Candidates, Statuses}
+  alias Wttj.{Jobs, Candidates, Columns}
 
   def get_job(_parent, %{job_id: job_id}, _resolution) do
     case Jobs.get_job(job_id) do
@@ -14,10 +14,10 @@ defmodule Wttj.Resolvers.JobTracking do
     {:ok, jobs}
   end
 
-  def list_statuses(_parent, %{job_id: job_id}, _resolution) do
-    statuses = Statuses.list_statuses(job_id)
+  def list_columns(_parent, %{job_id: job_id}, _resolution) do
+    columns = Columns.list_columns(job_id)
 
-    {:ok, statuses}
+    {:ok, columns}
   end
 
   def list_candidates(_parent, %{job_id: job_id}, _resolution) do
@@ -30,23 +30,23 @@ defmodule Wttj.Resolvers.JobTracking do
     subscription_module =
       Application.get_env(:wttj, :subscription_publisher, Absinthe.Subscription)
 
-    with :ok <- validate_status_version(args),
+    with :ok <- validate_column_version(args),
          {:ok, update} <-
            Candidates.update_candidate_display_order(
              args[:candidate_id],
              args[:before_index],
              args[:after_index],
-             args[:source_status_version],
-             args[:destination_status_id],
-             args[:destination_status_version]
+             args[:source_column_version],
+             args[:destination_column_id],
+             args[:destination_column_version]
            ) do
       subscription_module.publish(
         WttjWeb.Endpoint,
         %{
           candidate: update.candidate,
           client_id: args.client_id,
-          destination_status: update.destination_status,
-          source_status: update.source_status,
+          destination_column: update.destination_column,
+          source_column: update.source_column,
 
         },
         candidate_moved: "candidate_moved:#{update.candidate.job_id}"
@@ -55,22 +55,22 @@ defmodule Wttj.Resolvers.JobTracking do
       {:ok,
        %{
          candidate: update.candidate,
-         destination_status: update.destination_status,
-         source_status: update.source_status,
+         destination_column: update.destination_column,
+         source_column: update.source_column,
        }}
     end
   end
 
-  defp validate_status_version(%{destination_status_id: status_id} = args)
-       when not is_nil(status_id) do
+  defp validate_column_version(%{destination_column_id: column_id} = args)
+       when not is_nil(column_id) do
     case args do
-      %{destination_status_version: version} when not is_nil(version) ->
+      %{destination_column_version: version} when not is_nil(version) ->
         :ok
 
       _ ->
-        {:error, "destination_status_version is required when destination_status_id is present"}
+        {:error, "destination_column_version is required when destination_column_id is present"}
     end
   end
 
-  defp validate_status_version(_args), do: :ok
+  defp validate_column_version(_args), do: :ok
 end

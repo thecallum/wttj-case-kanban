@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom'
 import { Text } from '@welcome-ui/text'
 import { Flex } from '@welcome-ui/flex'
 import { Box } from '@welcome-ui/box'
-import { Candidate, Status } from '../../types'
+import { Candidate, Column } from '../../types'
 import CandidateCard from '../../components/Candidate'
 import { Badge } from '@welcome-ui/badge'
 import { useBoard } from '../../hooks/useBoard'
@@ -10,7 +10,7 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 
 function JobShow() {
   const { jobId } = useParams<{ jobId: string }>()
-  const { loading, error, job, sortedCandidates, statuses, handleOnDragEnd, updateError } =
+  const { loading, error, job, sortedCandidates, columns, handleOnDragEnd, updateError } =
     useBoard(jobId!)
 
   if (loading) {
@@ -30,9 +30,9 @@ function JobShow() {
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <Box p={20}>
           <Flex gap={10}>
-            {Array.from(statuses)
+            {Array.from(columns)
               .sort((a, b) => a.position - b.position)
-              .map((status: Status) => (
+              .map((column: Column) => (
                 <Box
                   w={300}
                   border={1}
@@ -40,7 +40,7 @@ function JobShow() {
                   borderColor="neutral-30"
                   borderRadius="md"
                   overflow="hidden"
-                  key={status.id}
+                  key={column.id}
                 >
                   <Flex
                     p={10}
@@ -50,16 +50,16 @@ function JobShow() {
                     justify="space-between"
                   >
                     <Text color="black" m={0} textTransform="capitalize">
-                      {status.label} - Version {status.lockVersion}
+                      {column.label} - Version {column.lockVersion}
                     </Text>
-                    <Badge>{(sortedCandidates[status.id] || []).length}</Badge>
+                    <Badge>{(sortedCandidates[column.id] || []).length}</Badge>
                   </Flex>
 
-                  <Droppable droppableId={`${status.id}`}>
+                  <Droppable droppableId={`${column.id}`}>
                     {provided => (
                       <div {...provided.droppableProps} ref={provided.innerRef}>
                         <Flex direction="column" p={10} pb={0}>
-                          {sortedCandidates[status.id]?.map(
+                          {sortedCandidates[column.id]?.map(
                             (candidate: Candidate, index: number) => (
                               <Draggable
                                 key={candidate.id}

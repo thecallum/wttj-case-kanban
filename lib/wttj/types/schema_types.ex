@@ -24,8 +24,8 @@ defmodule Wttj.Types.SchemaTypes do
     field :name, :string
   end
 
-  @desc "Contains the details of a specific status"
-  object :status do
+  @desc "Contains the details of a specific column"
+  object :column do
     field :id, :id
     field :label, :string
     field :position, :integer
@@ -40,21 +40,21 @@ defmodule Wttj.Types.SchemaTypes do
     field :display_order, :display_order
     field :email, :string
     field :job_id, :id
-    field :status_id, :id
+    field :column_id, :id
   end
 
   @desc "Return type for candidate_moved subscription"
   object :candidate_moved do
     field :candidate, :candidate
     field :client_id, :string
-    field :source_status, :status
-    field :destination_status, :status
+    field :source_column, :column
+    field :destination_column, :column
   end
 
   object :move_candidate_result do
     field :candidate, :candidate
-    field :source_status, :status
-    field :destination_status, :status
+    field :source_column, :column
+    field :destination_column, :column
   end
 
 end

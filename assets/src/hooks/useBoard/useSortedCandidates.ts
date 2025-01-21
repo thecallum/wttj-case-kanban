@@ -1,18 +1,18 @@
 import { useMemo } from 'react'
-import { Candidate, Status } from '../../types'
+import { Candidate, Column } from '../../types'
 import { SortedCandidates } from './types'
 
-export const useSortedCandidates = (candidates: Candidate[], statuses: Status[]) => {
+export const useSortedCandidates = (candidates: Candidate[], columns: Column[]) => {
   return useMemo(() => {
     if (!candidates) return {}
 
-    const statusesById: { [key: number]: Status } = {}
-    statuses?.forEach(status => {
-      statusesById[status.id] = status
+    const columnsById: { [key: number]: Column } = {}
+    columns?.forEach(column => {
+      columnsById[column.id] = column
     })
 
     return candidates.reduce<SortedCandidates>((acc, c: Candidate) => {
-      acc[c.statusId] = [...(acc[c.statusId] || []), c].sort((left, right) => {
+      acc[c.columnId] = [...(acc[c.columnId] || []), c].sort((left, right) => {
         return parseFloat(left.displayOrder!) - parseFloat(right.displayOrder!)
       })
       return acc

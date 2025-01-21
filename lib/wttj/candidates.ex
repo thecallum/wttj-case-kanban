@@ -7,39 +7,39 @@ defmodule Wttj.Candidates do
   alias Wttj.Repo
   alias Wttj.Indexing
   alias Wttj.Candidates.Candidate
-  alias Wttj.Statuses.Status
+  alias Wttj.Columns.Column
 
   def update_candidate_display_order(
         candidate_id,
         before_index,
         after_index,
-        source_status_version,
-        destination_status_id \\ nil,
-        destination_status_version \\ nil
+        source_column_version,
+        destination_column_id \\ nil,
+        destination_column_version \\ nil
       ) do
     with {:ok} <-
-           validate_destination_status_version(destination_status_id, destination_status_version),
+           validate_destination_column_version(destination_column_id, destination_column_version),
          {:ok, candidate} <- get_candidate_by_id(candidate_id),
-         {:ok} <- validate_status_owned_by_board(candidate, destination_status_id),
+         {:ok} <- validate_column_owned_by_board(candidate, destination_column_id),
          {:ok, new_index} <- Indexing.generate_index(before_index, after_index),
          {:ok} <-
-           validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
-      if !is_nil(destination_status_id) && is_nil(destination_status_version) do
-        {:error, "destination_status_version cannot be null"}
+           validate_move_candidate(before_index, after_index, candidate, destination_column_id) do
+      if !is_nil(destination_column_id) && is_nil(destination_column_version) do
+        {:error, "destination_column_version cannot be null"}
       end
 
       Repo.transaction(fn ->
-        # 1. Get both statuses with current versions
-        source_status = fetch_and_lock_status(candidate.status_id)
-        dest_status = destination_status_id && fetch_and_lock_status(destination_status_id)
+        # 1. Get both columns with current versions
+        source_column = fetch_and_lock_column(candidate.column_id)
+        dest_column = destination_column_id && fetch_and_lock_column(destination_column_id)
 
         # 2. Version check - fail fast if versions don't match
-        if !validate_status_version(source_status, source_status_version) do
+        if !validate_column_version(source_column, source_column_version) do
           Repo.rollback(:version_mismatch)
         end
 
-        if destination_status_id &&
-             !validate_status_version(dest_status, destination_status_version) do
+        if destination_column_id &&
+             !validate_column_version(dest_column, destination_column_version) do
           Repo.rollback(:version_mismatch)
         end
 
@@ -48,102 +48,102 @@ defmodule Wttj.Candidates do
           candidate
           |> Candidate.changeset(%{
             display_order: new_index,
-            status_id: destination_status_id || candidate.status_id
+            column_id: destination_column_id || candidate.column_id
           })
           |> Repo.update()
 
         # 4. Increment both version numbers
-        source_status = increment_status_version(source_status)
-        dest_status = dest_status && increment_status_version(dest_status)
+        source_column = increment_column_version(source_column)
+        dest_column = dest_column && increment_column_version(dest_column)
 
         # 5. Return the updated candidate
         %{
           candidate: updated_candidate,
-          source_status: source_status,
-          destination_status: dest_status
+          source_column: source_column,
+          destination_column: dest_column
         }
       end)
     end
   end
 
-  defp validate_destination_status_version(destination_status_id, destination_status_version) do
-    if !is_nil(destination_status_id) && is_nil(destination_status_version) do
-      {:error, "destination_status_version cannot be null"}
+  defp validate_destination_column_version(destination_column_id, destination_column_version) do
+    if !is_nil(destination_column_id) && is_nil(destination_column_version) do
+      {:error, "destination_column_version cannot be null"}
     else
       {:ok}
     end
   end
 
-  defp fetch_and_lock_status(status_id) do
-    from(s in Status,
-      where: s.id == ^status_id,
+  defp fetch_and_lock_column(column_id) do
+    from(s in Column,
+      where: s.id == ^column_id,
       lock: "FOR UPDATE"
     )
     |> Repo.one!()
   end
 
-  defp validate_status_version(status, provided_version) do
-    status.lock_version == provided_version
+  defp validate_column_version(column, provided_version) do
+    column.lock_version == provided_version
   end
 
-  defp increment_status_version(status) do
-    new_version_number = status.lock_version + 1
+  defp increment_column_version(column) do
+    new_version_number = column.lock_version + 1
 
-    Repo.update!(Status.changeset(status, %{lock_version: new_version_number}))
+    Repo.update!(Column.changeset(column, %{lock_version: new_version_number}))
   end
 
-  defp validate_status_owned_by_board(_candidate, nil), do: {:ok}
+  defp validate_column_owned_by_board(_candidate, nil), do: {:ok}
 
-  defp validate_status_owned_by_board(candidate, destination_status_id) do
+  defp validate_column_owned_by_board(candidate, destination_column_id) do
     query =
-      from s in Status,
-        where: s.id == ^destination_status_id
+      from s in Column,
+        where: s.id == ^destination_column_id
 
     case Repo.one(query) do
       nil ->
-        {:error, "status not found"}
+        {:error, "column not found"}
 
-      status ->
-        if status.job_id == candidate.job_id do
+      column ->
+        if column.job_id == candidate.job_id do
           {:ok}
         else
-          {:error, "status does not belong to job"}
+          {:error, "column does not belong to job"}
         end
     end
   end
 
-  defp validate_move_candidate(before_index, after_index, candidate, destination_status_id) do
+  defp validate_move_candidate(before_index, after_index, candidate, destination_column_id) do
     # board_id = candidate.
 
     case {before_index, after_index} do
       {nil, nil} ->
-        if is_nil(destination_status_id) or candidate.status_id == destination_status_id do
+        if is_nil(destination_column_id) or candidate.column_id == destination_column_id do
           {:error, "candidate already exists in the list youre trying to move it to"}
         else
           validate_move_candidate_empty_list(
             candidate,
-            destination_status_id
+            destination_column_id
           )
         end
 
       {nil, after_index} ->
         validate_move_candidate_start_of_list(
           candidate.id,
-          destination_status_id || candidate.status_id,
+          destination_column_id || candidate.column_id,
           after_index
         )
 
       {before_index, nil} ->
         validate_move_candidate_end_of_list(
           candidate.id,
-          destination_status_id || candidate.status_id,
+          destination_column_id || candidate.column_id,
           before_index
         )
 
       {before_index, after_index} ->
         validate_move_candidate_middle_of_list(
           candidate.id,
-          destination_status_id || candidate.status_id,
+          destination_column_id || candidate.column_id,
           before_index,
           after_index
         )
@@ -157,11 +157,11 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate_empty_list(candidate, status_id) do
+  defp validate_move_candidate_empty_list(candidate, column_id) do
     query =
       from c in Candidate,
         where:
-          c.status_id == ^status_id and
+          c.column_id == ^column_id and
             not is_nil(c.display_order) and
             c.id != ^candidate.id,
         select: c.display_order
@@ -173,11 +173,11 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate_start_of_list(candidate_id, status_id, after_index) do
+  defp validate_move_candidate_start_of_list(candidate_id, column_id, after_index) do
     query =
       from c in Candidate,
         where:
-          c.status_id == ^status_id and
+          c.column_id == ^column_id and
             c.display_order <= ^after_index and
             c.id != ^candidate_id,
         order_by: [asc: c.display_order],
@@ -198,11 +198,11 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate_end_of_list(candidate_id, status_id, before_index) do
+  defp validate_move_candidate_end_of_list(candidate_id, column_id, before_index) do
     query =
       from c in Candidate,
         where:
-          c.status_id == ^status_id and
+          c.column_id == ^column_id and
             c.display_order >= ^before_index and
             c.id != ^candidate_id,
         order_by: [asc: c.display_order],
@@ -223,11 +223,11 @@ defmodule Wttj.Candidates do
     end
   end
 
-  defp validate_move_candidate_middle_of_list(candidate_id, status_id, before_index, after_index) do
+  defp validate_move_candidate_middle_of_list(candidate_id, column_id, before_index, after_index) do
     query =
       from c in Candidate,
         where:
-          c.status_id == ^status_id and
+          c.column_id == ^column_id and
             c.display_order >= ^before_index and
             c.display_order <= ^after_index and
             c.id != ^candidate_id,

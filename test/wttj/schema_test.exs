@@ -1,7 +1,7 @@
 defmodule Wttj.SchemaTest do
   use WttjWeb.ConnCase
   import Wttj.JobsFixtures
-  import Wttj.StatusesFixtures
+  import Wttj.ColumnsFixtures
   import Wttj.CandidatesFixtures
 
   describe "query :job" do
@@ -98,10 +98,10 @@ defmodule Wttj.SchemaTest do
     end
   end
 
-  describe "query :statuses" do
-    @list_statuses_query """
-      query ListStatuses($jobId: ID!) {
-        statuses(jobId: $jobId)  {
+  describe "query :columns" do
+    @list_columns_query """
+      query Listcolumns($jobId: ID!) {
+        columns(jobId: $jobId)  {
           id
           jobId
           position
@@ -110,34 +110,34 @@ defmodule Wttj.SchemaTest do
       }
     """
 
-    test "returns list of statuses" do
+    test "returns list of columns" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
-      status2 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
+      column2 = column_fixture(%{job_id: job1.id})
 
       # Act
       {:ok, result} =
         Absinthe.run(
-          @list_statuses_query,
+          @list_columns_query,
           Wttj.Schema,
           variables: %{"jobId" => job1.id}
         )
 
       # Assert
       assert result.data == %{
-               "statuses" => [
+               "columns" => [
                  %{
-                   "id" => to_string(status1.id),
-                   "jobId" => to_string(status1.job_id),
-                   "position" => status1.position,
-                   "label" => status1.label
+                   "id" => to_string(column1.id),
+                   "jobId" => to_string(column1.job_id),
+                   "position" => column1.position,
+                   "label" => column1.label
                  },
                  %{
-                   "id" => to_string(status2.id),
-                   "jobId" => to_string(status2.job_id),
-                   "position" => status2.position,
-                   "label" => status2.label
+                   "id" => to_string(column2.id),
+                   "jobId" => to_string(column2.job_id),
+                   "position" => column2.position,
+                   "label" => column2.label
                  }
                ]
              }
@@ -149,7 +149,7 @@ defmodule Wttj.SchemaTest do
       # Act
       {:ok, result} =
         Absinthe.run(
-          @list_statuses_query,
+          @list_columns_query,
           Wttj.Schema
         )
 
@@ -169,7 +169,7 @@ defmodule Wttj.SchemaTest do
           id
           jobId
           position
-          statusId
+          columnId
           displayOrder
         }
       }
@@ -178,13 +178,13 @@ defmodule Wttj.SchemaTest do
     test "returns list of candidates" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "1"})
 
       candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       # Act
       {:ok, result} =
@@ -202,7 +202,7 @@ defmodule Wttj.SchemaTest do
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
                    "position" => candidate1.position,
-                   "statusId" => to_string(candidate1.status_id),
+                   "columnId" => to_string(candidate1.column_id),
                    "displayOrder" => candidate1.display_order
                  },
                  %{
@@ -210,7 +210,7 @@ defmodule Wttj.SchemaTest do
                    "id" => to_string(candidate2.id),
                    "jobId" => to_string(candidate2.job_id),
                    "position" => candidate2.position,
-                   "statusId" => to_string(candidate2.status_id),
+                   "columnId" => to_string(candidate2.column_id),
                    "displayOrder" => candidate2.display_order
                  }
                ]
@@ -241,31 +241,31 @@ defmodule Wttj.SchemaTest do
         $candidateId: ID!,
         $beforeIndex: DisplayOrder,
         $afterIndex: DisplayOrder,
-        $destinationStatusId: ID,
+        $destinationColumnId: ID,
         $clientId: String!,
-        $sourceStatusVersion: Int!,
-        $destinationStatusVersion: Int) {
+        $sourceColumnVersion: Int!,
+        $destinationColumnVersion: Int) {
         moveCandidate(
           candidateId: $candidateId,
           beforeIndex: $beforeIndex,
           afterIndex: $afterIndex,
-          destinationStatusId: $destinationStatusId,
+          destinationColumnId: $destinationColumnId,
           clientId: $clientId,
-          sourceStatusVersion: $sourceStatusVersion,
-          destinationStatusVersion: $destinationStatusVersion) {
+          sourceColumnVersion: $sourceColumnVersion,
+          destinationColumnVersion: $destinationColumnVersion) {
           candidate {
             id
             email
             jobId
             position
             displayOrder
-            statusId
+            columnId
           }
-          sourceStatus {
+          sourceColumn {
             id
             lockVersion
           }
-          destinationStatus {
+          destinationColumn {
             id
             lockVersion
           }
@@ -273,17 +273,17 @@ defmodule Wttj.SchemaTest do
       }
     """
     @client_id "1234abcd"
-    @destination_status_version 1
-    @source_status_version 1
+    @destination_column_version 1
+    @source_column_version 1
 
     test "returns ok when moving candidate to empty list" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
-      status2 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
+      column2 = column_fixture(%{job_id: job1.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       # Act
       {:ok, result} =
@@ -292,10 +292,10 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate1.id,
-            "destinationStatusId" => status2.id,
+            "destinationColumnId" => column2.id,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
-            "destinationStatusVersion" => @destination_status_version
+            "sourceColumnVersion" => @source_column_version,
+            "destinationColumnVersion" => @destination_column_version
           }
         )
 
@@ -307,15 +307,15 @@ defmodule Wttj.SchemaTest do
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
                    "position" => candidate1.position,
-                   "statusId" => to_string(status2.id),
+                   "columnId" => to_string(column2.id),
                    "displayOrder" => "1"
                  },
-                 "destinationStatus" => %{
-                   "id" => to_string(status2.id),
+                 "destinationColumn" => %{
+                   "id" => to_string(column2.id),
                    "lockVersion" => 2
                  },
-                 "sourceStatus" => %{
-                   "id" => to_string(status1.id),
+                 "sourceColumn" => %{
+                   "id" => to_string(column1.id),
                    "lockVersion" => 2
                  }
                }
@@ -325,15 +325,15 @@ defmodule Wttj.SchemaTest do
     test "returns ok when moving candidate to top of list" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "1"})
 
-      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "3"})
 
       # Act
       {:ok, result} =
@@ -344,7 +344,7 @@ defmodule Wttj.SchemaTest do
             "candidateId" => candidate3.id,
             "afterIndex" => candidate1.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version
+            "sourceColumnVersion" => @source_column_version
           }
         )
 
@@ -356,12 +356,12 @@ defmodule Wttj.SchemaTest do
                    "id" => to_string(candidate3.id),
                    "jobId" => to_string(candidate3.job_id),
                    "position" => candidate3.position,
-                   "statusId" => to_string(status1.id),
+                   "columnId" => to_string(column1.id),
                    "displayOrder" => "0.5"
                  },
-                 "destinationStatus" => nil,
-                 "sourceStatus" => %{
-                   "id" => to_string(status1.id),
+                 "destinationColumn" => nil,
+                 "sourceColumn" => %{
+                   "id" => to_string(column1.id),
                    "lockVersion" => 2
                  }
                }
@@ -371,15 +371,15 @@ defmodule Wttj.SchemaTest do
     test "returns ok when moving candidate to bottom of list" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "1"})
 
-      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "3"})
 
       # Act
       {:ok, result} =
@@ -390,7 +390,7 @@ defmodule Wttj.SchemaTest do
             "candidateId" => candidate1.id,
             "beforeIndex" => candidate3.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version
+            "sourceColumnVersion" => @source_column_version
           }
         )
 
@@ -402,12 +402,12 @@ defmodule Wttj.SchemaTest do
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
                    "position" => candidate1.position,
-                   "statusId" => to_string(status1.id),
+                   "columnId" => to_string(column1.id),
                    "displayOrder" => "4"
                  },
-                 "destinationStatus" => nil,
-                 "sourceStatus" => %{
-                   "id" => to_string(status1.id),
+                 "destinationColumn" => nil,
+                 "sourceColumn" => %{
+                   "id" => to_string(column1.id),
                    "lockVersion" => 2
                  }
                }
@@ -417,16 +417,16 @@ defmodule Wttj.SchemaTest do
     test "returns ok when moving candidate within a list" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "1"})
 
       candidate2 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "3"})
 
       # Act
       {:ok, result} =
@@ -438,7 +438,7 @@ defmodule Wttj.SchemaTest do
             "beforeIndex" => candidate2.display_order,
             "afterIndex" => candidate3.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version
+            "sourceColumnVersion" => @source_column_version
           }
         )
 
@@ -450,12 +450,12 @@ defmodule Wttj.SchemaTest do
                    "id" => to_string(candidate1.id),
                    "jobId" => to_string(candidate1.job_id),
                    "position" => candidate1.position,
-                   "statusId" => to_string(status1.id),
+                   "columnId" => to_string(column1.id),
                    "displayOrder" => "2.5"
                  },
-                 "destinationStatus" => nil,
-                 "sourceStatus" => %{
-                   "id" => to_string(status1.id),
+                 "destinationColumn" => nil,
+                 "sourceColumn" => %{
+                   "id" => to_string(column1.id),
                    "lockVersion" => 2
                  }
                }
@@ -475,7 +475,7 @@ defmodule Wttj.SchemaTest do
             "beforeIndex" => "1.2s",
             "afterIndex" => "abcd",
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version
+            "sourceColumnVersion" => @source_column_version
           }
         )
 
@@ -489,9 +489,9 @@ defmodule Wttj.SchemaTest do
     test "returns error when :candidate_id not included" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
-      status_fixture(%{job_id: job1.id})
-      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      column1 = column_fixture(%{job_id: job1.id})
+      column_fixture(%{job_id: job1.id})
+      candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       # Act
       {:ok, result} =
@@ -500,7 +500,7 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version
+            "sourceColumnVersion" => @source_column_version
           }
         )
 
@@ -511,15 +511,15 @@ defmodule Wttj.SchemaTest do
              ]
     end
 
-    test "returns error when status not owned by job" do
+    test "returns error when column not owned by job" do
       # Arrange
       job1 = job_fixture()
       job2 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
-      status2 = status_fixture(%{job_id: job2.id})
+      column1 = column_fixture(%{job_id: job1.id})
+      column2 = column_fixture(%{job_id: job2.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       # Act
       {:ok, result} =
@@ -528,23 +528,23 @@ defmodule Wttj.SchemaTest do
           Wttj.Schema,
           variables: %{
             "candidateId" => candidate1.id,
-            "destinationStatusId" => status2.id,
+            "destinationColumnId" => column2.id,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version,
-            "destinationStatusVersion" => @destination_status_version
+            "sourceColumnVersion" => @source_column_version,
+            "destinationColumnVersion" => @destination_column_version
           }
         )
 
       # Assert
       assert Enum.map(result.errors, fn error -> error.message end) == [
-               "status does not belong to job"
+               "column does not belong to job"
              ]
     end
 
     test "returns error when candidate not found" do
       # Arrange
       job1 = job_fixture()
-      status_fixture(%{job_id: job1.id})
+      column_fixture(%{job_id: job1.id})
 
       # Act
       {:ok, result} =
@@ -554,7 +554,7 @@ defmodule Wttj.SchemaTest do
           variables: %{
             "candidateId" => 100,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version
+            "sourceColumnVersion" => @source_column_version
           }
         )
 
@@ -567,18 +567,18 @@ defmodule Wttj.SchemaTest do
     test "returns error when range includes more than 2 candidates" do
       # Arrange
       job1 = job_fixture()
-      status1 = status_fixture(%{job_id: job1.id})
+      column1 = column_fixture(%{job_id: job1.id})
 
       candidate1 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "1"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "1"})
 
-      candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "2"})
+      candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "2"})
 
       candidate3 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "3"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "3"})
 
       candidate4 =
-        candidate_fixture(%{job_id: job1.id, status_id: status1.id, display_order: "4"})
+        candidate_fixture(%{job_id: job1.id, column_id: column1.id, display_order: "4"})
 
       # Act
       {:ok, result} =
@@ -590,7 +590,7 @@ defmodule Wttj.SchemaTest do
             "beforeIndex" => candidate1.display_order,
             "afterIndex" => candidate3.display_order,
             "clientId" => @client_id,
-            "sourceStatusVersion" => @source_status_version
+            "sourceColumnVersion" => @source_column_version
           }
         )
 

@@ -61,11 +61,11 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 # Documentation
 
-## 1. Moving the status entity to the backend
+## 1. Moving the column entity to the backend
 
-The first issue I identified when viewing the applicaiton was the hardcoded columns, called statuses. 
+The first issue I identified when viewing the applicaiton was the hardcoded columns, called Columns. 
 
-I could see that there would be a potential need to customise these columns. Adding that functionality one the application had been developed would require redoing a lot of work. So I added the table `Status`.
+I could see that there would be a potential need to customise these columns. Adding that functionality one the application had been developed would require redoing a lot of work. So I added the table `Column`.
 ```mermaid
 erDiagram
     Job {
@@ -74,7 +74,7 @@ erDiagram
         datetime updated_at
     }
     
-    Status {
+    Column {
         string label
         integer position
         integer job_id FK
@@ -88,17 +88,17 @@ erDiagram
         string display_order
         string email
         integer job_id FK
-        integer status_id FK
+        integer column_id FK
         datetime inserted_at
         datetime updated_at
     }
 
-    Job ||--o{ Status : "has many"
+    Job ||--o{ Column : "has many"
     Job ||--o{ Candidate : "has many"
-    Status ||--o{ Candidate : "has many"
+    Column ||--o{ Candidate : "has many"
 ```
 
-With the new entity, I added `statusController` to the backend, a `useStatus` hook to the frontend and dynamically rendered the result.
+With the new entity, I added `columnController` to the backend, a `useColumn` hook to the frontend and dynamically rendered the result.
 
 ## 2. Migrating to GraphQL
 
@@ -107,7 +107,7 @@ I decided to configure GraphQL in the project for a few primary reasons:
 - I've not used Graphql before, so I wanted to try it out, given its in the job description
 - Replacing multiple API calls with a single query simplifies the logic, and makes testing simpler
 
-The first step was to simply setup query schemas to jobs, statuses and candidates. The schema for each query calls a resolver, which could simply call the existing Context modules used by the controlers.
+The first step was to simply setup query schemas to jobs, columns and candidates. The schema for each query calls a resolver, which could simply call the existing Context modules used by the controlers.
 
 For the frontend, I replaced the three hooks with a single `useBoard` hook. Below is the most basic implementation of the useQuery.
 
@@ -122,10 +122,10 @@ export const GET_BOARD = gql`
       email
       id
       jobId
-      statusId
+      columnId
       displayOrder
     }
-    statuses(jobId: $jobId) {
+    columns(jobId: $jobId) {
       id
       jobId
       position
@@ -138,7 +138,7 @@ export const GET_BOARD = gql`
   const { loading, error } = useQuery<{
     job: Job
     candidates: Candidate[]
-    statuses: Status[]
+    columns: Column[]
   }>(GET_BOARD, {
     variables: { jobId },
     onCompleted(data) {
@@ -251,14 +251,14 @@ subscription TestSubscription($jobId: ID!) {
       jobId
       position
       displayOrder
-      statusId
+      columnId
     }
     clientId
-    sourceStatus {
+    sourceColumn {
       id
       lockVersion
     }
-    destinationStatus {
+    destinationColumn {
       id
       lockVersion
     }
@@ -285,8 +285,8 @@ Im specifically calling the subscription module to publish the events when a can
     %{
         candidate: update.candidate,
         client_id: args.client_id,
-        destination_status: update.destination_status,
-        source_status: update.source_status,
+        destination_column: update.destination_column,
+        source_column: update.source_column,
 
     },
     candidate_moved: "candidate_moved:#{update.candidate.job_id}"
@@ -335,7 +335,7 @@ To break down the problem in more simple terms:
 
 If the state has changed prior to the server recieving the request, the change might be incorrect. It may be possible to calculate the result, but that would be very dificualt and I simply dont have the time. 
 
-To solve this problem, I used optimistic locking. To did this by adding a `lock_version` property to the status table. When the user moves a candidate, first it validates the request, with the assumtion that the state is correct. after that: 
+To solve this problem, I used optimistic locking. To did this by adding a `lock_version` property to the column table. When the user moves a candidate, first it validates the request, with the assumtion that the state is correct. after that: 
     1. Start a transaction. This wraps all of the database changes together. Either they all get applied, or the changes are reverted.
     2. Next, we lock the two columns. We need to ensure they're not updated during the transaction
     3. We compare the columkn version with the ones sent from the client. If they dont match, the request is out of date, and must be rejected
