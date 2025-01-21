@@ -2,7 +2,7 @@
 
 ## Running the app via Docker
 
-It may take a few minutes to build.
+You can run the application with docker with two commands. It can be slow to build, so I recommend the native approach if you don't have time.
 
 ```bash
 docker-compose build phoenix
@@ -11,23 +11,53 @@ docker-compose up phoenix
 
 The app should be running on [http://localhost:4001/](http://localhost:4001/).
 
+If you see the following error, you may need to change the line ending to LF.
+
+```bash
+phoenix-1  | exec /app/entrypoint.sh: no such file or directory
+phoenix-1 exited with code 1
+```
+
+## Running natively
+
+If docker isn't working (it worked on my machine), as a backup you can run the application locally.
+
+This approach assumes you have Elixir setup on your machine.
+
+```bash
+docker-compose up pgadmin --detach
+mix deps.get
+mix ecto.create
+mix ecto.migrate
+mix phx.server
+```
+
+In a second terminal:
+```bash
+cd assets
+yarn
+yarn dev
+```
+
+The frontend should be running on [http://localhost:5173/](http://localhost:5173/).
+
 ## Things to note
 
 ### Commit history
 
 I am aware that the commit history isn't ideal, as required in the brief. When learning a new framework, it's hard to implement changes in an atomic way. I have found it much easier to get things working and iterate later.
 
-I have since added refactoring and improved the documentation once I knew which methods/modules werent going to change.
+I have since added refactoring and improved the documentation once I understood which methods/modules werent going to change.
 
 ### Known issue with display order
 
 Currently, the display order property is still stored a string within Postgres, when it should be a float. This results sorting errors.
 
-For example, if a column contains a candidate with a displayorder 10 or greater, and you try to drag a candidate afterwards, you will see the error "more than one candidate found within range". This is because "10" will appear before "9" when it is a string.
+For example, if a column contains a candidate with a displayorder of 10 or greater, and you try to drag a candidate afterwards, you will see the error "more than one candidate found within range". This is because "10" will appear before "9" when it is a string.
 
 ### Lack of frontend testing
 
-When I started this task, I decided not to implement frontend tests. I have taken the assumption that my ability to grasp Elixir is of more importance. So I have put more focus on the backend.
+When I started this task, I decided not to implement frontend tests. I have made the assumption that my ability to grasp Elixir is of more important. So I have put more focus on the backend.
 
 That being said, if I were to have enough time, I would implement most of the frontend tests in Cypress.
 
