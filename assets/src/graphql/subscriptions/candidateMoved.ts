@@ -7,7 +7,6 @@ subscription TestSubscription($jobId: ID!) {
       id
       email
       jobId
-      position
       displayOrder
       columnId
     }
